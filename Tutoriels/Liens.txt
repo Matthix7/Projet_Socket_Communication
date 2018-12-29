@@ -1,0 +1,8 @@
+Tuto Sockets
+------------
+http://sdz.tdct.org/sdz/les-sockets.html
+
+
+Tuto Threads et Mutex
+---------------------
+https://franckh.developpez.com/tutoriels/posix/pthreads/
