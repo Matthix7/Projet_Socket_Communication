@@ -1,0 +1,248 @@
+@media screen and (max-width: 975px) {
+	body {
+		background: #fff;
+	}
+
+	#gabarit_b1, 
+	#gabarit-barreRecherche, 
+	#gabarit-new-logo, 
+	#gabarit_pubBB, 
+	#gabarit_superieur, 
+	#gabarit_logo, 
+	#gabarit_menu, 
+	ul.gabarit_sousmenu, 
+	#gabarit_barre1, 
+	#gabarit_barre2, 
+	#gabarit_responsable, 
+	#gabarit_pied, 
+	#gabarit_recherche {
+		display: none;
+	}
+
+	#gabarit_pub0, #gabarit_pub1 {
+		display: none !important;
+	}
+
+	#gabarit_mobile {
+		display: block;
+	}
+
+	#gabarit_mobile_fin {
+		display: block !important;
+	}
+}
+
+#gabarit_mobile {
+	position:relative;
+	font-size: 10pt;
+	min-height: 80px;
+	text-align: left;
+	border:1px solid #487388;
+	color: #fff;
+	background: #628eba;
+	background: -moz-linear-gradient(top,  #628eba 0%, #487388 100%);
+	background: -webkit-linear-gradient(top,  #628eba 0%,#487388 100%);
+	background: linear-gradient(to bottom,  #628eba 0%,#487388 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#628eba', endColorstr='#487388',GradientType=0 );
+}
+
+#gabarit_mobile div:first-child {
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: block;
+}
+
+#gabarit_mobile div:nth-child(2) {
+	position: absolute;
+	left: 0;
+	top: 0;
+	color: #2f3d46;
+	width: 100%;
+	text-align: center;
+	font-weight: bold;
+	text-shadow: 1px 1px 1px #6fa1c8;
+}
+
+#gabarit_mobile div:nth-child(2) p {
+	margin-bottom:0;
+}
+
+#gabarit_mobile div:nth-child(2) p:first-child {
+	text-align:left;
+	margin:4px 0 5px 4px;
+	color:#e2e9ed;
+	text-shadow: 1px 1px 1px #455d6e;
+	font-weight:bold;
+	font-size:0.8rem;
+	letter-spacing: 0.1rem;
+}
+
+#gabarit_mobile div:nth-child(3) {
+	margin: 50px auto 0;
+}
+
+#gabarit_mobile div:nth-child(3) a, #gabarit_mobile div:nth-child(3) span {
+	display: inline-block;
+	font-size: 8pt;
+	margin: 0;
+	padding: 6px 11px;
+	text-decoration: none;
+	cursor: pointer;
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+}
+
+#gabarit_mobile.longMenu div:nth-child(3) a, #gabarit_mobile.longMenu div:nth-child(3) span {
+	margin: 0 0 6px 0;
+	border-radius: 4px;
+	padding: 4px 0px;
+	width: calc(100% - 43px);
+	background: #2a526c;
+	color: #abd3ea;
+	border: 1px solid #6193bb;
+}
+
+#gabarit_mobile.longMenu div:nth-child(3) span {
+	margin-bottom:10px;
+}
+
+#gabarit_mobile div:nth-child(4) {
+	margin: 6px 0 8px 0;
+	text-align:center;
+}
+
+#gabarit_mobile div:nth-child(4) a, #gabarit_mobile div:nth-child(4) span {
+	display: inline-block;
+	font-size: 8pt;
+	margin: 0;
+	padding: 4px 11px;
+	text-decoration: none;
+	cursor: pointer;
+	border-radius: 4px;
+	background: #284d65;
+	background: -moz-linear-gradient(top,  #284d65 0%, #1b415a 100%);
+	background: -webkit-linear-gradient(top,  #284d65 0%,#1b415a 100%);
+	background: linear-gradient(to bottom,  #284d65 0%,#1b415a 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#284d65', endColorstr='#1b415a',GradientType=0 );
+	color: #abd3ea;
+	border: 1px solid #6193bb;
+}
+
+#gabarit_mobile div.padSpec:nth-child(4) a, #gabarit_mobile div.padSpec:nth-child(4) span {
+	padding: 4px 30px; 
+	white-space:nowrap;
+}
+
+#gabarit_mobile div:nth-child(4) span.activeSpan {
+	background: #368c30;
+	background: -moz-linear-gradient(top, #368c30 0%, #1f5a1b 100%);
+	background: -webkit-linear-gradient(top, #368c30 0%,#1f5a1b 100%);
+	background: linear-gradient(to bottom, #368c30 0%,#1f5a1b 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#368c30', endColorstr='#1f5a1b',GradientType=0 );
+	color: #d4f7d1;
+	border: 1px solid #329337;
+}
+
+#gabarit_mobile_fin {
+	height: 8px;
+	border-top: 1px solid #6193bb;
+	margin-bottom: -2px;
+	background-color: #1b415a;
+	width: calc(100% + 1px);
+	margin: 0 -1px -2px;
+	-webkit-box-shadow: 0 1px 2px 0 #39576b;
+	box-shadow: 0 1px 2px 0 #39576b;
+}
+
+#gabarit_menu_mobile {
+
+	width: 100%;
+	xheight: 100%;
+	background: white;
+	color: white;
+	font-size: 10pt;
+	z-index: 2;
+	overflow:hidden;
+}
+
+#gabarit_menu_mobile p {
+	color: #cbe3ee;
+	background: #102838;
+	height: 16px;
+	padding: 6px;
+	margin: 0 !important;
+	font-size:0.75rem;
+}
+
+#gabarit_menu_mobile a,
+#gabarit_menu_mobile a:active,
+#gabarit_menu_mobile a:focus,
+#gabarit_menu_mobile a:visited {
+	display:block;
+	color: white;
+	text-decoration: none;
+	padding-left: 10px;
+	outline: none;
+}
+
+#gabarit_menu_mobile > ul {
+	list-style: none;
+	position:relative;
+	margin: 0 0 4px;
+	padding: 0;
+	background: #6b90a8;
+	border-bottom: 10px solid #254c68;
+}
+
+#gabarit_menu_mobile > ul > li {
+	margin: 0 0 1px 0;
+	padding: 4px 0 4px 0;
+	background: #5A7F97;
+	width: 100%;
+}
+
+#gabarit_menu_mobile > ul > li:hover, #gabarit_menu_mobile > ul > li.active {
+	background: #254c68;
+}
+
+#gabarit_menu_mobile > ul > li > ul.gabarit_sousmenu {
+	display:none;
+	width:100%;
+	position:relative;
+	border:0;
+	margin: 4px 0 -4px 0;
+	background-color: #225063;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	box-shadow: inset 3px 4px #000;
+	-moz-box-shadow: inset 0px 0px 5px 0px #4699cf;
+	-webkit-box-shadow: inset 0px 0px 5px 0px #4699cf;
+	-o-box-shadow: inset 0px 0px 5px 0px #4699cf;
+	box-shadow: inset 0px 0px 5px 0px #4699cf;
+	filter: progid:DXImageTransform.Microsoft.Shadow(color=#4699cf, Direction=NaN, Strength=5);
+}
+
+#gabarit_menu_mobile > ul > li > ul.gabarit_sousmenu li {
+	margin::0;
+	padding: 0;
+	background-color: #AFC3D0;
+}
+
+#gabarit_menu_mobile > ul > li > ul.gabarit_sousmenu li:hover,
+#gabarit_menu_mobile > ul > li > ul.gabarit_sousmenu li:hover a {
+	background: #e4e4e4;
+}
+
+#gabarit_menu_mobile > ul > li > ul.gabarit_sousmenu a,
+#gabarit_menu_mobile > ul > li > ul.gabarit_sousmenu a:active,
+#gabarit_menu_mobile > ul > li > ul.gabarit_sousmenu a:focus,
+#gabarit_menu_mobile > ul > li > ul.gabarit_sousmenu a:visited {
+	color: #0e3245;
+	font-size:0.7rem;
+	padding: 0 20px;
+}
+
+#gabarit_mobile_fin {
+	display: none;
+}

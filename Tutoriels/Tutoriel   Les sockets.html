@@ -1,0 +1,3401 @@
+<html wtx-context="D0E58B63-43D4-453B-AF16-7937DD990767"><!-- Mirrored from 62.4.17.167/sdz/sdz/les-sockets.html by HTTrack Website Copier/3.x [XR&CO'2013], Sun, 27 Oct 2013 05:51:04 GMT --><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Tutoriel : Les sockets</title>
+<link href="Tutoriel%20%20%20Les%20sockets_fichiers/sdz_main.css" type="text/css" rel="stylesheet" media="all">
+</head>
+        <body>
+<a href="http://sdz.tdct.org/www.siteduzero.com/informatique/tutoriels/les-sockets" class="version_en_ligne">Version en ligne</a>
+<h1>Tutoriel : Les sockets</h1>
+<h2>Table des matières</h2><div class="table_des_matieres"><a href="#Lessockets">Les sockets</a><br><a href="#Histoireetfonctionnement">Histoire et fonctionnement</a><br><a href="#Unpeud039histoire">Un peu d'histoire</a><br><a href="#Leursfonctionnement">Leurs fonctionnement</a><br><a href="#Manipulationdesockets">Manipulation de sockets</a><br><a href="#Partie1L039applicationserveur">Partie 1 : L'application serveur</a><br><a href="#Partie2L039applicationclient">Partie 2 : L'application client</a><br><a href="#Latransmissiondeflux">La transmission de flux</a><br><a href="#Transmissiond039unechanedecaractres">Transmission d'une chaîne de caractères</a><br><a href="#Transmissiond039unestructure">Transmission d'une structure</a><br><a href="#Unproblmedeportabilit">Un problème de portabilité</a><br><a href="#Lesthreadsetlesmutex">Les threads et les mutex</a><br><a href="#Quelquesdfinitions">Quelques définitions</a><br><a href="#Installationdepthread">Installation de pthread</a><br><a href="#Lesthreads">Les threads</a><br><a href="#Laselectiondesockets">La selection de sockets</a><br><a href="#Lefonctionnement">Le fonctionnement</a><br><a href="#Unpeudepratique">Un peu de pratique</a><br></div>
+<a name="Lessockets"></a><h2>Les sockets</h2><div class="content" role="article">
+<p id="r-148062" data-claire-element-id="148062">Dans ce tutoriel, nous 
+allons apprendre à utiliser les sockets avec le protocole TCP/IP, une 
+communication logique entre des systèmes reliés au <a href="http://fr.wikipedia.org/wiki/R%C3%A9seau_informatique">réseau</a> internet, ou entre des applications en local...<br> Il faudra comme pré-requis connaître les deux premières parties du cours de M@teo21 sur <a href="http://www.siteduzero.com/tuto-3-8-0-apprenez-a-programmer-en-c-c.html">le langage C</a>.</p><aside id="r-148064" data-claire-element-id="148064" data-claire-semantic="information"><p id="r-148063" data-claire-element-id="148063">Malheureusement,
+ comme je ne connais pas Mac OS, je ne pourrai aider que les 
+utilisateurs de Linux et Windows tout au long de ce tutoriel. Cependant,
+ le fonctionnement des sockets Mac doit être le même que sous Linux, car
+ ces deux systèmes ont une même base : <a href="http://fr.wikipedia.org/wiki/UNIX">UNIX</a>.</p></aside>
+</div>
+<div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1358423835269-0" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1358423835269-0');
+        });
+    }
+    </script><div id="div-gpt-ad-1358423835269-0" class="megaban"></div>
+</div><a name="Histoireetfonctionnement"></a><h2>Histoire et fonctionnement</h2><div class="paginate-tuto">
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+<span class="next">Un peu d'histoire</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div class="content">
+<p id="r-148066" data-claire-element-id="148066">Dans ce chapitre vous apprendrez presque tout sur l'histoire des sockets.<br> Vous verrez comment elles fonctionnent mais aussi quand et pourquoi elles ont été créées.<br>
+ Nous nous attaquerons ensuite à la partie préprocesseur du code qui 
+nous sera indispensable par la suite dans tous les projets avec des 
+sockets.</p>
+</div><a name="Unpeud039histoire"></a><h2>Un peu d'histoire</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">
+<span class="arrow"></span>
+<span class="next">Histoire et fonctionnement</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+<span class="next">Leurs fonctionnement</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-un-peu-d-histoire-5" data-claire-element-id="148077">Un peu d'histoire</h4><p id="r-148067" data-claire-element-id="148067">Les sockets ont été mises au point en 1984, lors de la création des distributions BSD (<em>Berkeley Software Distribution</em>). Apparues pour la première fois dans les systèmes <a href="http://fr.wikipedia.org/wiki/UNIX">UNIX</a>, les sockets sont des points de terminaison mis à l'écoute sur le <a href="http://fr.wikipedia.org/wiki/R%C3%A9seau_informatique">réseau</a>, afin de faire transiter des données logicielles. <br> Celles-ci sont associées à un numéro de <a href="http://fr.wikipedia.org/wiki/Port_(logiciel)">port</a>.<br>
+ Les ports sont des numéros allant de 0 à 216-1 inclus (soit 65535 :p ).
+ Chacun de ces ports est associé à une application (à savoir que les 
+1024 premiers ports sont réservé à des utilisations bien précises).<br> Les sockets sont aussi associées à un <a href="http://fr.wikipedia.org/wiki/Protocole_de_communication">protocole</a>. Vous avez sûrement déjà entendu parler des protocoles <a href="http://fr.wikipedia.org/wiki/User_Datagram_Protocol">UDP/IP</a> et <a href="http://fr.wikipedia.org/wiki/Transmission_Control_Protocol">TCP/IP</a>, sinon renseignez-vous ;) . Dans notre cas nous utiliserons le protocole TCP/IP.<br> Les sockets servent à établir une transmission de flux de données (<a href="http://fr.wikipedia.org/wiki/Octets">octets</a>) entre deux machines ou applications.</p><div id="r-148069" data-claire-element-id="148069" data-claire-semantic="question"><p id="r-148068" data-claire-element-id="148068">C'est bien tout ça, mais à quoi ça sert exactement :p ?</p></div><p id="r-148070" data-claire-element-id="148070">Eh bien en C, vous avez sûrement plus d'une fois eu besoin d'un moyen de communication entre deux programmes, non ?<br>
+ Dans ce cas on utilise parfois des fichiers qui servent de "passerelle"
+ ^^ , mais on passe souvent à côté des sockets qui peuvent le faire 
+aussi bien ;) (je dirai même mieux :p ).<br> Le principal atout des 
+sockets est que les informations sont transmises directement au 
+programme voulu en plus d'être plus sécurisées que les fichiers.<br> Elles servent bien plus qu'on ne le pense... <br> Par exemple, le langage <a href="http://www.siteduzero.com/tutoriel-3-14668-un-site-dynamique-avec-php.html#part_14667">PHP</a> illustre très bien les sockets, car il utilise ce principe "Client / Serveur".<br> Ou bien même, quand vous naviguez sur Internet dans une page <a href="http://www.siteduzero.com/tutoriel-3-13666-apprenez-a-creer-votre-site-web.html#part_13665">XHTML</a>, votre navigateur va utiliser les sockets pour demander au serveur le <a href="http://fr.wikipedia.org/wiki/Code_source">code source</a> de la page, pour pouvoir afficher ce qu'elle contient :</p><figure id="r-148072" data-claire-element-id="148073"><img id="r-148071" data-claire-element-id="148071" src="Tutoriel%20%20%20Les%20sockets_fichiers/uploads_002.png" alt="Image utilisateur"></figure><aside id="r-148075" data-claire-element-id="148075" data-claire-semantic="warning"><p id="r-148074" data-claire-element-id="148074">Ce
+ schéma est TRES simplifié ! Il n'est pas complet, mais permet d'avoir 
+une vision simplifiée du principe. Pour le moment nous nous contenterons
+ de cela.</p></aside><p id="r-148076" data-claire-element-id="148076">Elles servent aussi pour tout ce qui touche au <a href="http://fr.wikipedia.org/wiki/R%C3%A9seau_informatique">réseau</a>.<br> Vous voyez donc que les exemples sont multiples; je ne les citerai pas tous :p .</p>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">
+<span class="arrow"></span>
+<span class="next">Histoire et fonctionnement</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+<span class="next">Leurs fonctionnement</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Leursfonctionnement"></a><h2>Leurs fonctionnement</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+<span class="arrow"></span>
+<span class="next">Un peu d'histoire</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">
+<span class="next">Manipulation de sockets</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-leurs-fonctionnement" data-claire-element-id="148105">Leurs fonctionnement</h4><p id="r-148078" data-claire-element-id="148078">Les
+ sockets ne s'utilisent pas de manière identique selon les différents 
+systèmes d'exploitation : je vais donc vous guider tout le long de ce 
+chapitre pour que vous ne quittiez pas le bon chemin :p .</p><h5 id="r-les-inclusions-et-les-ressources" data-claire-element-id="148101">Les inclusions et les ressources</h5><h6 id="r-sur-windows" data-claire-element-id="148091">Sur Windows</h6><p id="r-148079" data-claire-element-id="148079">Tout d'abord, n'oubliez pas, dans <strong>chaque projet</strong>
+ que vous créez, d'ajouter le fichier "ws2_32.lib" (pour le compilateur 
+Visual C++) ou "libws2_32.a" (pour les autres) dans votre éditeur de 
+liens. Vous trouverez ce fichier dans le dossier "lib" de votre IDE. 
+J'insiste un peu, car on oublie très souvent de le faire :p .</p><p id="r-148080" data-claire-element-id="148080">Il faut savoir que presque tout ce qui touche aux sockets Windows se trouve dans le fichier "winsock2.h", dans le dossier <em>header</em> de votre IDE. Celui-ci est un fichier standard de Windows, il n'y a pas besoin de le télécharger ;) .<br> Nous allons donc tout de suite l'inclure dans notre premier programme comme suit :</p><pre id="r-148081" data-claire-element-id="148081"><code data-claire-semantic="c">#include &lt;winsock2.h&gt;</code></pre><p id="r-148082" data-claire-element-id="148082">En général, vous aurez besoin des fichiers standards "stdio.h" et "stdlib.h".<br> Nous allons donc aussi les inclure :</p><pre id="r-148083" data-claire-element-id="148083"><code data-claire-semantic="c">#include &lt;winsock2.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;</code></pre><p id="r-148084" data-claire-element-id="148084">On
+ peut remarquer que le type socklen_t qui existe sous Linux, n'est pas 
+défini sous Windows. Ce type sert à stocker la taille d'une structures 
+de type sockaddr_in. Ça n'est rien d'autre qu'un entier mais il nous 
+évitera des problèmes éventuels de compilation sous Linux par la suite. 
+Il va donc falloir le définir nous même à l'aide du mot clef typedef 
+comme il suit :</p><pre id="r-148085" data-claire-element-id="148085"><code data-claire-semantic="c">typedef int socklen_t;</code></pre><p id="r-148086" data-claire-element-id="148086">De plus, vous devrez ajouter, dans le début de votre fonction <em>main</em>, le code suivant pour pouvoir utiliser les sockets sous Windows :</p><pre id="r-148087" data-claire-element-id="148087"><code data-claire-semantic="c">WSADATA WSAData;
+WSAStartup(MAKEWORD(2,2), &amp;WSAData);</code></pre><p id="r-148088" data-claire-element-id="148088">La fonction <a href="http://msdn2.microsoft.com/en-us/library/ms742213.aspx">WSAStartup</a>
+ sert à initialiser la bibliothèque WinSock. La macro MAKEWORD 
+transforme les deux entiers (d'un octet) qui lui sont passés en 
+paramètres en un seul entier (de 2 octets) qu'elle retourne. Cet entier 
+sert à renseigner la bibliothèque sur la version que l'utilisateur 
+souhaite utiliser (ici la version 2,0). Elle retourne la valeur 0 si 
+tout s'est bien passé.<br> Puis à la fin, placez celui-ci :</p><pre id="r-148089" data-claire-element-id="148089"><code data-claire-semantic="c">WSACleanup();</code></pre><p id="r-148090" data-claire-element-id="148090">Cette fonction va simplement libérer les ressources allouées par la fonction WSAStartup().</p><h6 id="r-sur-linux" data-claire-element-id="148100">Sur Linux</h6><p id="r-148092" data-claire-element-id="148092">Sur Linux, c'est un peu différent puisque les fichiers à inclure ne sont pas les mêmes...<br> Pour combler l'écart entre Windows et Linux, nous utiliserons des <em>définitions</em> et des <em>typedef</em>.<br> Commençons par inclure les fichiers nécessaires :</p><pre id="r-148093" data-claire-element-id="148093"><code data-claire-semantic="c">#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;</code></pre><p id="r-148094" data-claire-element-id="148094">Un premier problème se pose : <br> Dans le fichier "socket.h" de Linux, la fonction qui sert à fermer une socket (que nous verrons par la suite) se nomme <em>close</em> alors que dans le fichier "winsock2.h" de Windows la fonction se nomme <em>closesocket</em> ... Pour éviter de faire deux codes sources pour deux OS différents, nous utiliserons une définition comme il suit :</p><pre id="r-148095" data-claire-element-id="148095"><code data-claire-semantic="c">#define closesocket(param) close(param)</code></pre><p id="r-148096" data-claire-element-id="148096">Ainsi dans le code la fonction closesocket() sera remplacée par la fonction close() qui pourra ensuite être exécutée.</p><p id="r-148097" data-claire-element-id="148097">Le deuxième problème vient du fait qu'il "manque" deux définitions et trois <em>typedef</em> qui peuvent nous être utile dans le fichier "socket.h" de Linux par rapport au fichier "winsock2.h" de Windows.<br> Voila donc le contenu de notre fichier pour le moment :</p><pre id="r-148098" data-claire-element-id="148098"><code data-claire-semantic="c">#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt; 
+
+#define INVALID_SOCKET -1
+#define SOCKET_ERROR -1
+#define closesocket(param) close(param)
+
+typedef int SOCKET;
+typedef struct sockaddr_in SOCKADDR_IN;
+typedef struct sockaddr SOCKADDR;</code></pre><p id="r-148099" data-claire-element-id="148099">Sachez qu'il y a beaucoup de fichiers à inclure par rapport à Windows mais qu'ils sont tous utiles.</p><h5 id="r-un-code-portable" data-claire-element-id="148104">Un code portable</h5><p id="r-148102" data-claire-element-id="148102">Pour pouvoir avoir un code un peu plus portable, nous utiliserons les définitions WIN32 et linux.<br> Cette méthode indiquera à votre compilateur le code à compiler en fonction de votre OS.</p><pre id="r-148103" data-claire-element-id="148103"><code data-claire-semantic="c">//Si nous sommes sous Windows
+#if defined (WIN32)
+
+    #include &lt;winsock2.h&gt;
+
+    // typedef, qui nous serviront par la suite
+    typedef int socklen_t;
+
+// Sinon, si nous sommes sous Linux
+#elif defined (linux)
+
+    #include &lt;sys/types.h&gt;
+    #include &lt;sys/socket.h&gt;
+    #include &lt;netinet/in.h&gt;
+    #include &lt;arpa/inet.h&gt;
+    #include &lt;unistd.h&gt;
+
+    // Define, qui nous serviront par la suite
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
+    #define closesocket(s) close (s)
+
+    // De même
+    typedef int SOCKET;
+    typedef struct sockaddr_in SOCKADDR_IN;
+    typedef struct sockaddr SOCKADDR;
+
+#endif
+
+// On inclut les fichiers standards
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt; 
+
+
+
+int main(void)
+{
+    // Si la plateforme est Windows
+    #if defined (WIN32)
+        WSADATA WSAData;
+        WSAStartup(MAKEWORD(2,2), &amp;WSAData);
+    #endif
+
+    // ICI on mettra notre code sur les sockets
+
+    // Si la plateforme est Windows
+    #if defined (WIN32)
+        WSACleanup();
+    #endif
+
+    return EXIT_SUCCESS;
+}</code></pre>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+<span class="arrow"></span>
+<span class="next">Un peu d'histoire</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">
+<span class="next">Manipulation de sockets</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Manipulationdesockets"></a><h2>Manipulation de sockets</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+<span class="arrow"></span>
+<span class="next">Leurs fonctionnement</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+<span class="next">Partie 1 : L'application serveur</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div class="content">
+<p id="r-148107" data-claire-element-id="148107">Dans cette partie, nous
+ verrons qu'il n'est pas si difficile de manipuler les sockets en C, et 
+que leur utilisation peut s'avérer très pratique dans bon nombre de cas.
+ ^^</p>
+</div><a name="Partie1L039applicationserveur"></a><h2>Partie 1 : L'application serveur</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">
+<span class="arrow"></span>
+<span class="next">Manipulation de sockets</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+<span class="next">Partie 2 : L'application client</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-partie-1-l-application-serveur" data-claire-element-id="148209">Partie 1 : L'application serveur</h4><p id="r-148108" data-claire-element-id="148108">Pour pouvoir utiliser pleinement les sockets, nous allons suivre une démarche précise ^^ :<br> Tout d'abord, nous allons <strong>créer une socket</strong> pour pouvoir configurer la connexion qu'elle va établir.<br> Ensuite, nous allons <strong>la paramétrer</strong> pour <strong>communiquer avec le client</strong>.<br> Enfin, nous allons <strong>fermer la connexion</strong> précédemment établie.<br>
+ Je ne sais pas si vous vous rappelez du schéma que j'avais fait dans le
+ chapitre précédent, si c'est le cas oubliez-le et sinon tant mieux :p .<br> Voici comment cela va se passer vraiment si l'on reprend l'ancien schéma :</p><figure id="r-148110" data-claire-element-id="148111"><img id="r-148109" data-claire-element-id="148109" src="Tutoriel%20%20%20Les%20sockets_fichiers/uploads_003.png" alt="Image utilisateur"></figure><p id="r-148112" data-claire-element-id="148112">(Notez
+ que ce schéma est toujours simplifié car le client ne va pas dire 
+"Bonjour" et le serveur ne va pas répondre "oui, bien sûr" :p ... tout 
+se fait par données.)<br> Chaque action est associée à une fonction que nous allons voir dans ce chapitre ;) .</p><h5 id="r-creer-une-socket" data-claire-element-id="148133">Créer une socket</h5><p id="r-148113" data-claire-element-id="148113">Pour utiliser une socket, il va nous falloir le déclarer avec le type <em>SOCKET</em> :</p><pre id="r-148114" data-claire-element-id="148114"><code data-claire-semantic="c">SOCKET sock;</code></pre><p id="r-148115" data-claire-element-id="148115">Pour la créer, il nous faudra utiliser la fonction <a href="http://www.gnu.org/software/libc/manual/html_node/Creating-a-Socket.html#Creating-a-Socket">socket</a> avec le prototype suivant :</p><pre id="r-148116" data-claire-element-id="148116"><code data-claire-semantic="c">int socket(int domain, int type, int protocol);</code></pre><ul id="r-148132" data-claire-element-id="148132"><li id="r-148118" data-claire-element-id="148118"><p id="r-148117" data-claire-element-id="148117">La fonction retourne une socket créée à partir des paramètres qui suivent.</p></li><li id="r-148120" data-claire-element-id="148120"><p id="r-148119" data-claire-element-id="148119">Le paramètre <strong>domain</strong> représente la famille de protocoles utilisée.<br> Il prend la valeur AF_INET pour le protocole TCP/IP.<br> Sinon, il prend la valeur AF_UNIX pour les communications UNIX en local sur une même machine.</p></li><li id="r-148128" data-claire-element-id="148128"><p id="r-148121" data-claire-element-id="148121">Le <strong>type</strong> indique le type de service, il peut avoir les valeurs suivantes :</p><ul id="r-148126" data-claire-element-id="148126"><li id="r-148123" data-claire-element-id="148123"><p id="r-148122" data-claire-element-id="148122">SOCK_STREAM, si on utilise le protocole TCP/IP.</p></li><li id="r-148125" data-claire-element-id="148125"><p id="r-148124" data-claire-element-id="148124">SOCK_DGRAM, si on utilise le protocole UDP/IP.</p></li></ul><p id="r-148127" data-claire-element-id="148127">Nous utiliserons donc la première (notez qu'il en existe d'autres comme SOCK_RAW mais ils nous seront inutiles).</p></li><li id="r-148131" data-claire-element-id="148131"><p id="r-148129" data-claire-element-id="148129">Dans le cas de la suite TCP/IP, le paramètre <strong>protocol</strong> n'est pas utile, on le mettra ainsi toujours à 0.<br> Comme dans notre cas nous utiliserons le protocole TCP/IP, notre fonction sera toujours :</p><pre id="r-148130" data-claire-element-id="148130"><code data-claire-semantic="c">sock = socket(AF_INET, SOCK_STREAM, 0);</code></pre></li></ul><h5 id="r-parametrer-une-socket" data-claire-element-id="148150">Paramétrer une socket</h5><p id="r-148134" data-claire-element-id="148134">Après avoir déclaré et créé la socket, nous allons la paramétrer ^^ .<br>
+ Pour cela, nous allons déclarer une structure de type SOCKADDR_IN qui 
+va nous permettre de configurer la connexion. On l'appelle contexte 
+d'adressage. Cette structure est définie de la façon suivante :</p><pre id="r-148135" data-claire-element-id="148135"><code data-claire-semantic="c">struct sockaddr_in
+{
+    short      sin_family;
+    unsigned short   sin_port;
+    struct   in_addr   sin_addr;
+    char   sin_zero[8];
+};</code></pre><aside id="r-148137" data-claire-element-id="148137" data-claire-semantic="information"><p id="r-148136" data-claire-element-id="148136">Notez
+ que la structure in_addr ne contient qu'un seul et unique champ nommé 
+s_addr dont le type importe peu car nous n'y touchons pas directement 
+(de plus celui-ci varie plus ou moins d'un système d'exploitation à un 
+autre).</p></aside><ul id="r-148147" data-claire-element-id="148147"><li id="r-148140" data-claire-element-id="148140"><p id="r-148138" data-claire-element-id="148138"><strong>sin.sin_addr.s_addr</strong> sera l'IP donnée automatiquement au serveur. Pour le connaître nous utiliserons la fonction <em>htonl</em> avec comme seul paramètre la valeur INADDR_ANY.<br> Si vous voulez spécifier une adresse IP precise à utiliser, il est possible d'utiliser la fonction <em>inet_addr</em> avec comme seul paramètre l'IP dans une chaine de caractères :</p><pre id="r-148139" data-claire-element-id="148139"><code data-claire-semantic="c">inet_addr("127.0.0.1");</code></pre></li><li id="r-148142" data-claire-element-id="148142"><p id="r-148141" data-claire-element-id="148141"><strong>sin.sin_family</strong> sera toujours égal à AF_INET dans notre cas (<a href="http://www.gnu.org/software/libc/manual/html_node/Address-Formats.html#Address-Formats">en savoir plus</a>).</p></li><li id="r-148144" data-claire-element-id="148144"><p id="r-148143" data-claire-element-id="148143">Et <strong>sin.sin_port</strong> sera égal à la valeur retournée par la fonction <em>htons</em>, avec comme paramètre le port utilisé.</p></li><li id="r-148146" data-claire-element-id="148146"><p id="r-148145" data-claire-element-id="148145">Le champ <strong>sin_zero</strong> ne sera pas utilisé.</p></li></ul><p id="r-148148" data-claire-element-id="148148">Nous allons la déclarer et l'initialiser comme ceci :</p><pre id="r-148149" data-claire-element-id="148149"><code data-claire-semantic="c">SOCKADDR_IN sin;
+sin.sin_addr.s_addr = htonl(INADDR_ANY);   
+sin.sin_family = AF_INET;
+sin.sin_port = htons(23);</code></pre><h5 id="r-etablir-une-connexion-avec-le-client" data-claire-element-id="148193">Établir une connexion avec le client</h5><p id="r-148151" data-claire-element-id="148151">Enfin, pour associer à la socket ces informations, nous allons utiliser la fonction :</p><pre id="r-148152" data-claire-element-id="148152"><code data-claire-semantic="c">int bind(int socket, const struct sockaddr* addr, socklen_t addrlen);</code></pre><ul id="r-148161" data-claire-element-id="148161"><li id="r-148154" data-claire-element-id="148154"><p id="r-148153" data-claire-element-id="148153">La fonction retourne SOCKET_ERROR en cas d'erreur (<a href="http://www.gnu.org/software/libc/manual/html_node/Setting-Address.html#Setting-Address">en savoir plus</a>).</p></li><li id="r-148156" data-claire-element-id="148156"><p id="r-148155" data-claire-element-id="148155">Le paramètre <strong>socket</strong> désigne la socket du serveur avec laquelle on va associer les informations.</p></li><li id="r-148158" data-claire-element-id="148158"><p id="r-148157" data-claire-element-id="148157">Le paramètre <strong>addr</strong> est un pointeur de structure sockaddr du serveur.<br>
+ Il spécifie l'IP à laquelle on se connecte... Comme la fonction a 
+besoin d'un pointeur sur structure sockaddr, et que nous disposons que 
+d'une structure SOCKADDR_IN, nous allons faire un <em>cast</em>, pour éviter que le compilateur nous retourne une erreur lors de la compilation.</p></li><li id="r-148160" data-claire-element-id="148160"><p id="r-148159" data-claire-element-id="148159">Le paramètre <strong>addrlen</strong> sera la taille mémoire occupée par le contexte d'adressage du serveur (notre structure SOCKADDR_IN), nous utiliserons donc <em>sizeof</em> ;) (si vous ne vous rappelez plus du cours de m@teo21, je vous conseil de relire le cours sur <a href="http://www.siteduzero.com/tuto-3-4830-1-l-allocation-dynamique.html#ss_part_1">l'allocation dynamique</a> :p ).</p></li></ul><p id="r-148162" data-claire-element-id="148162">Donc, nous ferons toujours ainsi :</p><pre id="r-148163" data-claire-element-id="148163"><code data-claire-semantic="c">bind(sock, (SOCKADDR*)&amp;sin, sizeof(sin));</code></pre><p id="r-148164" data-claire-element-id="148164">Voilà
+ ! Maintenant que toutes les informations sont données, il va falloir 
+mettre la socket dans un état d'écoute (établir la connexion, si vous 
+préférez :p ).<br> Pour cela, nous allons utiliser la fonction <a href="http://www.gnu.org/software/libc/manual/html_node/Listening.html#Listening">listen</a>. Voici son prototype :</p><pre id="r-148165" data-claire-element-id="148165"><code data-claire-semantic="c">int listen(int socket, int backlog);</code></pre><ul id="r-148172" data-claire-element-id="148172"><li id="r-148167" data-claire-element-id="148167"><p id="r-148166" data-claire-element-id="148166">La fonction retourne SOCKET_ERROR si une erreur est survenue.</p></li><li id="r-148169" data-claire-element-id="148169"><p id="r-148168" data-claire-element-id="148168">Le paramètre <strong>socket</strong> désigne la socket qui va être utilisée.</p></li><li id="r-148171" data-claire-element-id="148171"><p id="r-148170" data-claire-element-id="148170">Le paramètre <strong>backlog</strong> représente le nombre maximal de connexions pouvant être mises en attente.</p></li></ul><p id="r-148173" data-claire-element-id="148173">Nous utiliserons donc notre fonction ainsi :</p><pre id="r-148174" data-claire-element-id="148174"><code data-claire-semantic="c">listen(sock, 5);</code></pre><p id="r-148175" data-claire-element-id="148175">En général, on met le nombre maximal de connexions pouvant être mises en attente à 5 (comme les clients FTP).</p><p id="r-148176" data-claire-element-id="148176">Enfin, on termine avec la fonction <a href="http://www.gnu.org/software/libc/manual/html_node/Accepting-Connections.html#Accepting-Connections">accept</a> avec le prototype suivant :</p><pre id="r-148177" data-claire-element-id="148177"><code data-claire-semantic="c">int accept(int socket, struct sockaddr* addr, socklen_t* addrlen);</code></pre><p id="r-148178" data-claire-element-id="148178">Cette fonction permet la connexion entre le client et le serveur en acceptant un appel de connexion.</p><ul id="r-148187" data-claire-element-id="148187"><li id="r-148180" data-claire-element-id="148180"><p id="r-148179" data-claire-element-id="148179">La fonction retourne la valeur INVALID_SOCKET en cas d'échec. Sinon, elle retourne la socket du client.</p></li><li id="r-148182" data-claire-element-id="148182"><p id="r-148181" data-claire-element-id="148181">Le paramètre <strong>socket</strong> est, comme dans les autre fonctions, la socket serveur utilisée.</p></li><li id="r-148184" data-claire-element-id="148184"><p id="r-148183" data-claire-element-id="148183">Le paramètre <strong>addr</strong> est un pointeur sur le contexte d'adressage du client.</p></li><li id="r-148186" data-claire-element-id="148186"><p id="r-148185" data-claire-element-id="148185">Le paramètre <strong>addrlen</strong> ne s'utilise pas comme dans la fonction <em>bind</em>
+ ; ici, il faut créer une variable taille de type socklen_t (qui n'est 
+rien d'autre qu'un entier), égale à la taille du contexte d'adressage du
+ client. Ensuite, il faudra passer l'adresse de cette variable en 
+paramètre.</p></li></ul><p id="r-148188" data-claire-element-id="148188">On utilisera donc la fonction comme cela :</p><pre id="r-148189" data-claire-element-id="148189"><code data-claire-semantic="c">socklen_t taille = sizeof(csin);
+csock = accept(sock, (SOCKADDR*)&amp;csin, &amp;taille);</code></pre><p id="r-148190" data-claire-element-id="148190">Avec <strong>csock</strong> représentant la socket client et <strong>csin</strong> son contexte d'adressage.<br> Note : La fonction accept demande un type socklen_t* comme 3ème paramètre donc la variable taille doit être de type socklen_t.</p><aside id="r-148192" data-claire-element-id="148192" data-claire-semantic="warning"><p id="r-148191" data-claire-element-id="148191">La fonction <em>accept</em>
+ est une fonction bloquante qui se termine que si un client se connecte.
+ Pour le moment cela ne nous gène pas puisque nous sommes sous la 
+console, mais après, quand nous ferrons des applications fenêtrées, il 
+va falloir gérer <a href="http://fr.wikipedia.org/wiki/Processus_l%C3%A9ger">les threads</a>.
+ Vous devez juste retenir qu'ils servent à faire plusieurs choses en 
+parallèle dans une même application ;) . Ne vous inquiétez pas 
+j'aborderai les threads dans la suite du cours.</p></aside><h5 id="r-fermer-la-connexion" data-claire-element-id="148197">Fermer la connexion</h5><p id="r-148194" data-claire-element-id="148194">Finalement nous terminerons par la fonction <em>closesocket</em> qui permet de fermer une socket.</p><pre id="r-148195" data-claire-element-id="148195"><code data-claire-semantic="c">int closesocket(int sock);</code></pre><p id="r-148196" data-claire-element-id="148196">Son prototype est très simple, je pense donc que la fonction se passe de commentaires :-° .</p><h5 id="r-on-recapitule-1" data-claire-element-id="148208">On récapitule</h5><p id="r-148198" data-claire-element-id="148198">Nous
+ allons réaliser une application qui va attendre qu'un client se 
+connecte à celle-ci. Bien sûr, comme nous n'avons pas encore fait 
+l'application "client", notre application (qui jouera le rôle de 
+serveur) ne pourra pas établir de connexion... Nous verrons ensuite les 
+fonctions relatives au "client", ce qui nous permettra de réaliser une 
+vraie connexion.<br> Sachez cependant que la partie serveur était la plus difficile et la plus longue ;) .</p><p id="r-148199" data-claire-element-id="148199">Réfléchissez un peu à l'ordre d'utilisation des fonctions, passez un peu de temps dessus.<br> Voir la solution directement ne vous aidera pas ^^ .</p><aside id="r-148201" data-claire-element-id="148201" data-claire-semantic="warning"><p id="r-148200" data-claire-element-id="148200">Il
+ ne faut pas oublier que chaque client et serveur contient une socket et
+ un contexte d'adressage pour lui seul. Notez qui est possible d'avoir 
+plusieurs sockets serveur sur pour une même application.</p></aside><p id="r-148202" data-claire-element-id="148202"></p><div id="r-148205" data-claire-element-id="148205"><pre id="r-148203" data-claire-element-id="148203"><code data-claire-semantic="c">#if defined (WIN32)
+    #include &lt;winsock2.h&gt;
+    typedef int socklen_t;
+#elif defined (linux)
+    #include &lt;sys/types.h&gt;
+    #include &lt;sys/socket.h&gt;
+    #include &lt;netinet/in.h&gt;
+    #include &lt;arpa/inet.h&gt;
+    #include &lt;unistd.h&gt;
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
+    #define closesocket(s) close(s)
+    typedef int SOCKET;
+    typedef struct sockaddr_in SOCKADDR_IN;
+    typedef struct sockaddr SOCKADDR;
+#endif
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#define PORT 23
+ 
+ 
+ 
+int main(void)
+{
+    #if defined (WIN32)
+        WSADATA WSAData;
+        int erreur = WSAStartup(MAKEWORD(2,2), &amp;WSAData);
+    #else
+        int erreur = 0;
+    #endif
+    
+    /* Socket et contexte d'adressage du serveur */
+    SOCKADDR_IN sin;
+    SOCKET sock;
+    socklen_t recsize = sizeof(sin);
+    
+    /* Socket et contexte d'adressage du client */
+    SOCKADDR_IN csin;
+    SOCKET csock;
+    socklen_t crecsize = sizeof(csin);
+    
+    int sock_err;
+    
+    
+    if(!erreur)
+    {
+        /* Création d'une socket */
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+        
+        /* Si la socket est valide */
+        if(sock != INVALID_SOCKET)
+        {
+            printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
+            
+            /* Configuration */
+            sin.sin_addr.s_addr = htonl(INADDR_ANY);  /* Adresse IP automatique */
+            sin.sin_family = AF_INET;                 /* Protocole familial (IP) */
+            sin.sin_port = htons(PORT);               /* Listage du port */
+            sock_err = bind(sock, (SOCKADDR*)&amp;sin, recsize);
+            
+            /* Si la socket fonctionne */
+            if(sock_err != SOCKET_ERROR)
+            {
+                /* Démarrage du listage (mode server) */
+                sock_err = listen(sock, 5);
+                printf("Listage du port %d...\n", PORT);
+                
+                /* Si la socket fonctionne */
+                if(sock_err != SOCKET_ERROR)
+                {
+                    /* Attente pendant laquelle le client se connecte */
+                    printf("Patientez pendant que le client se connecte sur le port %d...\n", PORT);
+                    csock = accept(sock, (SOCKADDR*)&amp;csin, &amp;crecsize);
+                    printf("Un client se connecte avec la socket %d de %s:%d\n", csock, inet_ntoa(csin.sin_addr), htons(csin.sin_port));
+                }
+                else
+                    perror("listen");
+            }
+            else
+                perror("bind");
+            
+            /* Fermeture de la socket client et de la socket serveur */
+            printf("Fermeture de la socket client\n");
+            closesocket(csock);
+            printf("Fermeture de la socket serveur\n");
+            closesocket(sock);
+            printf("Fermeture du serveur terminée\n");
+        }
+        else
+            perror("socket");
+        
+        #if defined (WIN32)
+            WSACleanup();
+        #endif
+    }
+    
+    return EXIT_SUCCESS;
+}</code></pre><p id="r-148204" data-claire-element-id="148204">Le code n'est pas complexe quand on connaît les fonctions qu'il utilise ^^ .</p></div><aside id="r-148207" data-claire-element-id="148207" data-claire-semantic="warning"><p id="r-148206" data-claire-element-id="148206">Vous
+ devez être en mode administrateur (root sous linux) pour faire 
+fonctionner un programme serveur sinon cela risque de ne pas 
+fonctionner.</p></aside>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">
+<span class="arrow"></span>
+<span class="next">Manipulation de sockets</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+<span class="next">Partie 2 : L'application client</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Partie2L039applicationclient"></a><h2>Partie 2 : L'application client</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+<span class="arrow"></span>
+<span class="next">Partie 1 : L'application serveur</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">
+<span class="next">La transmission de flux</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-partie-2-l-application-client" data-claire-element-id="148256">Partie 2 : L'application client</h4><p id="r-148210" data-claire-element-id="148210">Normalement, tout devrait bien se passer puisque cette partie est plus simple :p .<br>
+ Sachez que les inclusions et les définitions se conservent, et donc 
+qu'il n'y aura qu'une partie de la fonction principale qui changera ;) .
+ Maintenant, nous allons réaliser l'application qui va jouer le rôle du 
+client. Pour cela, créez un nouveau projet.</p><p id="r-148211" data-claire-element-id="148211">Eh bien : récapitulons ce que nous savons faire :</p><ul id="r-148222" data-claire-element-id="148222"><li id="r-148213" data-claire-element-id="148213"><p id="r-148212" data-claire-element-id="148212">Créer une socket.</p></li><li id="r-148215" data-claire-element-id="148215"><p id="r-148214" data-claire-element-id="148214">Associer une Socket à un point de terminaison local.</p></li><li id="r-148217" data-claire-element-id="148217"><p id="r-148216" data-claire-element-id="148216">Mettre une Socket en état d'écoute.</p></li><li id="r-148219" data-claire-element-id="148219"><p id="r-148218" data-claire-element-id="148218">Accepter un appel de connexion avec un client.</p></li><li id="r-148221" data-claire-element-id="148221"><p id="r-148220" data-claire-element-id="148220">Fermer la connexion Socket, et libérer toutes les ressources associées.</p></li></ul><p id="r-148223" data-claire-element-id="148223">C'est
+ bien d'accepter un appel, mais faut déjà commencer par faire une 
+requête :p . Et oui, nous ne savons pas établir une connexion du côté 
+client ! Pour cela nous allons utiliser la fonction <a href="http://www.gnu.org/software/libc/manual/html_node/Connecting.html#Connecting">connect</a>.<br> Son prototype est le suivant :</p><pre id="r-148224" data-claire-element-id="148224"><code data-claire-semantic="c">int connect(int socket, struct sockaddr* addr, socklen_t addrlen);</code></pre><ul id="r-148233" data-claire-element-id="148233"><li id="r-148226" data-claire-element-id="148226"><p id="r-148225" data-claire-element-id="148225">La fonction retourne 0 si la connexion s'est bien déroulée, sinon -1.</p></li><li id="r-148228" data-claire-element-id="148228"><p id="r-148227" data-claire-element-id="148227">Le paramètre <strong>socket</strong> représente la socket à utiliser (ça n'a toujours pas changé :p ).</p></li><li id="r-148230" data-claire-element-id="148230"><p id="r-148229" data-claire-element-id="148229">Le paramètre <strong>addr</strong> représente l'adresse de l'hôte à contacter. On va faire un cast comme avec la fonction <em>accept</em>.</p></li><li id="r-148232" data-claire-element-id="148232"><p id="r-148231" data-claire-element-id="148231">Le dernier paramètre, <strong>addrlen</strong>, représente la taille de l'adresse de l'appelant (un sizeof suffira ^^ ).</p></li></ul><p id="r-148234" data-claire-element-id="148234">On va appeler notre fonction comme cela :</p><pre id="r-148235" data-claire-element-id="148235"><code data-claire-semantic="c">connect(sock, (SOCKADDR*)&amp;sin, sizeof(sin))</code></pre><p id="r-148236" data-claire-element-id="148236">Avec la structure <strong>sin</strong> précédemment déclarée et initialisée.</p><aside id="r-148238" data-claire-element-id="148238" data-claire-semantic="information"><p id="r-148237" data-claire-element-id="148237">Sachez que pour l'application client, il n'y aura besoin d'utiliser ni la fonction <em>bind</em> puisqu'elle est comprise dans la fonction <em>connect</em>, ni <em>listen</em> puisqu'il n'y a pas de sockets à mettre à l'écoute, ni encore <em>accept</em> puisque l'application joue le rôle de client.</p></aside><p id="r-148239" data-claire-element-id="148239">Et
+ voila c'est finie pour les nouvelles fonctions de notre application 
+client ^^ . Je vous avez dit que cette partie était plus simple :p .<br> Maintenant que vous savez tout ce dont vous avez besoin, vous pouvez commencer à réfléchir au code.</p><pre id="r-148240" data-claire-element-id="148240"><code data-claire-semantic="c">#if defined (WIN32)
+    #include &lt;winsock2.h&gt;
+    typedef int socklen_t;
+#elif defined (linux)
+    #include &lt;sys/types.h&gt;
+    #include &lt;sys/socket.h&gt;
+    #include &lt;netinet/in.h&gt;
+    #include &lt;arpa/inet.h&gt;
+    #include &lt;unistd.h&gt;
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
+    #define closesocket(s) close(s)
+    typedef int SOCKET;
+    typedef struct sockaddr_in SOCKADDR_IN;
+    typedef struct sockaddr SOCKADDR;
+#endif
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#define PORT 23
+ 
+ 
+ 
+int main(void)
+{
+    #if defined (WIN32)
+        WSADATA WSAData;
+        int erreur = WSAStartup(MAKEWORD(2,2), &amp;WSAData);
+    #else
+        int erreur = 0;
+    #endif
+ 
+    SOCKET sock;
+    SOCKADDR_IN sin;
+ 
+    if(!erreur)
+    {
+        /* Création de la socket */
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+ 
+        /* Configuration de la connexion */
+        sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+        sin.sin_family = AF_INET;
+        sin.sin_port = htons(PORT);
+ 
+        /* Si le client arrive à se connecter */
+        if(connect(sock, (SOCKADDR*)&amp;sin, sizeof(sin)) != SOCKET_ERROR)
+            printf("Connexion à %s sur le port %d\n", inet_ntoa(sin.sin_addr), htons(sin.sin_port));
+        else
+            printf("Impossible de se connecter\n");
+ 
+        /* On ferme la socket précédemment ouverte */
+        closesocket(sock);
+ 
+        #if defined (WIN32)
+            WSACleanup();
+        #endif
+    }
+ 
+    return EXIT_SUCCESS;
+}</code></pre><p id="r-148241" data-claire-element-id="148241">Ce code affiche cela si tout se passe bien :</p><pre id="r-148242" data-claire-element-id="148242"><code data-claire-semantic="console">Connexion&nbsp;à&nbsp;127.0.0.1&nbsp;sur&nbsp;le&nbsp;port&nbsp;23</code></pre><p id="r-148243" data-claire-element-id="148243">Ce
+ code va créer une socket et va essayer de se connecter sur une 
+application serveur en local, une seule fois, puis va se fermer.</p><p id="r-148244" data-claire-element-id="148244">Vous pouvez maintenant tester votre programme serveur :D .<br> Lancez votre programme serveur en premier, puis votre programme client.<br>
+ En effet : si vous faites le contraire, votre programme client va 
+essayer de se connecter au programme serveur alors que celui-ci n'est 
+pas lancé... Comme il ne se connecte qu'une seule fois, le programme 
+client se fermera alors que le programme serveur, lui, attendra une 
+connexion du client.</p><p id="r-148245" data-claire-element-id="148245">Votre programme serveur affiche donc ça avant d'être fermé :</p><pre id="r-148246" data-claire-element-id="148246"><code data-claire-semantic="console">La&nbsp;socket&nbsp;xxxx&nbsp;est&nbsp;maintenant&nbsp;ouverte&nbsp;en&nbsp;mode&nbsp;TCP/IP
+Listage&nbsp;du&nbsp;port&nbsp;23...
+Patientez&nbsp;pendant&nbsp;que&nbsp;le&nbsp;client&nbsp;se&nbsp;connecte&nbsp;sur&nbsp;le&nbsp;port&nbsp;23...
+Un&nbsp;client&nbsp;se&nbsp;connecte&nbsp;avec&nbsp;la&nbsp;socket&nbsp;xxxx&nbsp;de&nbsp;127.0.0.1:xxxx
+Fermeture&nbsp;de&nbsp;la&nbsp;socket
+Fermeture&nbsp;du&nbsp;serveur&nbsp;terminée</code></pre><p id="r-148247" data-claire-element-id="148247">Si ce n'est pas le cas, vérifiez que vous ne vous êtes pas trompés précédemment dans le code ;) .</p><h6 id="r-exercice-15" data-claire-element-id="148255">Exercice</h6><p id="r-148248" data-claire-element-id="148248">Maintenant, vous pouvez réaliser une connexion du client en boucle. Puis, une fois connectés, vous fermez les deux programmes.</p><p id="r-148249" data-claire-element-id="148249"></p><div id="r-148252" data-claire-element-id="148252"><div id="r-148251" data-claire-element-id="148251"><p id="r-148250" data-claire-element-id="148250">Ajoutez simplement une boucle au code qui précède :p !</p></div></div><p id="r-148253" data-claire-element-id="148253">Ce chapitre est dur à comprendre, et long. Si vous avez du mal, n'hésitez pas à le relire plusieurs fois ;) .</p><p id="r-148254" data-claire-element-id="148254">Dans
+ le chapitre suivant, nous verrons comment transmettre des variables et 
+des chaînes de caractères du serveur au client (on pourra faire un chat 
+:p ).</p>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+<span class="arrow"></span>
+<span class="next">Partie 1 : L'application serveur</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">
+<span class="next">La transmission de flux</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Latransmissiondeflux"></a><h2>La transmission de flux</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+<span class="arrow"></span>
+<span class="next">Partie 2 : L'application client</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+<span class="next">Transmission d'une chaîne de caractères</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div class="content">
+<p id="r-148258" data-claire-element-id="148258">Dans ce chapitre, nous allons apprendre à transmettre des flux d'octets du serveur au client.<br>
+ Vous verrez que ce que l'on va apprendre est le coeur d'une 
+communication entre le Client et le Serveur. Pour cela, nous allons 
+devoir découvrir d'autres fonctions :p .</p>
+</div><a name="Transmissiond039unechanedecaractres"></a><h2>Transmission d'une chaîne de caractères</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">
+<span class="arrow"></span>
+<span class="next">La transmission de flux</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+<span class="next">Transmission d'une structure</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-transmission-d-une-chaine-de-caracteres" data-claire-element-id="148338">Transmission d'une chaîne de caractères</h4><p id="r-148259" data-claire-element-id="148259">Pour
+ pouvoir réaliser une transmission de données, le programme serveur va 
+devoir envoyer des données, et le programme client les recevoir.</p><p id="r-148260" data-claire-element-id="148260">Pour cela, nous allons utiliser trois fonctions :</p><ul id="r-148267" data-claire-element-id="148267"><li id="r-148262" data-claire-element-id="148262"><p id="r-148261" data-claire-element-id="148261">La fonction <a href="http://www.gnu.org/software/libc/manual/html_node/Sending-Data.html#Sending-Data">send</a>, qui va envoyer les données (sous forme de tableau de char).</p></li><li id="r-148264" data-claire-element-id="148264"><p id="r-148263" data-claire-element-id="148263">La fonction <a href="http://www.gnu.org/software/libc/manual/html_node/Receiving-Data.html#Receiving-Data">recv</a>, qui va recevoir ce qu'a envoyé la fonction <em>send</em> (sous forme de tableau de char).</p></li><li id="r-148266" data-claire-element-id="148266"><p id="r-148265" data-claire-element-id="148265">La fonction <a href="http://www.gnu.org/software/libc/manual/html_node/Closing-a-Socket.html#Closing-a-Socket">shutdown</a>, qui va désactiver les envois et les réceptions sur la socket.</p></li></ul><p id="r-148268" data-claire-element-id="148268">Premièrement, nous allons revenir sur le code source du programme serveur, pour étudier le fonctionnement de la fonction <em>send</em>.</p><h6 id="r-la-fonction-send" data-claire-element-id="148286">La fonction send</h6><p id="r-148269" data-claire-element-id="148269">Voici son prototype :</p><pre id="r-148270" data-claire-element-id="148270"><code data-claire-semantic="c">int send(int socket, void* buffer, size_t len, int flags);</code></pre><ul id="r-148281" data-claire-element-id="148281"><li id="r-148272" data-claire-element-id="148272"><p id="r-148271" data-claire-element-id="148271">La fonction retourne SOCKET_ERROR en cas d'erreur, sinon elle retourne le nombre d'octets envoyés.</p></li><li id="r-148274" data-claire-element-id="148274"><p id="r-148273" data-claire-element-id="148273">Le premier paramètre représente la socket destinée à recevoir le message.</p></li><li id="r-148276" data-claire-element-id="148276"><p id="r-148275" data-claire-element-id="148275">Le deuxième représente un pointeur (comme par exemple un tableau) dans lequel figureront nos informations à transmettre.</p></li><li id="r-148278" data-claire-element-id="148278"><p id="r-148277" data-claire-element-id="148277">Le paramètre <strong>len</strong> indique le nombre d'octets à lire.</p></li><li id="r-148280" data-claire-element-id="148280"><p id="r-148279" data-claire-element-id="148279">Le dernier correspond au type d'envoi ; il nous est inutile, nous le mettrons donc à 0 pour avoir un envoi normal.</p></li></ul><p id="r-148282" data-claire-element-id="148282">La fonction est très simple :</p><pre id="r-148283" data-claire-element-id="148283"><code data-claire-semantic="c">send(sock, buffer, sizeof(buffer), 0);</code></pre><aside id="r-148285" data-claire-element-id="148285" data-claire-semantic="warning"><p id="r-148284" data-claire-element-id="148284">sizeof(buffer)
+ n'est pas toujours la bonne valeur à mettre pour le troisième 
+paramètre. Par exemple, pour les chaînes de caractères, on peut utiliser
+ la fonction strlen pour connaitre la taille de la chaine (en lui 
+ajoutant 1 pour le caractère '\0'). De même, pour un tableau, il faut 
+passer en paramètre la taille totale du que prend le tableau (nombre de 
+cases * taille d'une case).</p></aside><h6 id="r-la-fonction-recv" data-claire-element-id="148304">La fonction recv</h6><p id="r-148287" data-claire-element-id="148287">Maintenant, nous allons nous pencher sur l'application client. Pour pouvoir étudier maintenant la fonction <em>recv</em>.<br> Cette fonction est aussi simple que la fonction <em>send</em>, et son fonctionnement le même :</p><pre id="r-148288" data-claire-element-id="148288"><code data-claire-semantic="c">int recv(int socket, void* buffer, size_t len, int flags)</code></pre><ul id="r-148299" data-claire-element-id="148299"><li id="r-148290" data-claire-element-id="148290"><p id="r-148289" data-claire-element-id="148289">La fonction retourne SOCKET_ERROR en cas d'erreur, sinon elle retourne le nombre d'octets lus.</p></li><li id="r-148292" data-claire-element-id="148292"><p id="r-148291" data-claire-element-id="148291">Le premier paramètre représente la socket destinée à attendre un message.</p></li><li id="r-148294" data-claire-element-id="148294"><p id="r-148293" data-claire-element-id="148293">Le deuxième représente un pointeur (un tableau, par exemple) dans lequel résideront les informations à recevoir.</p></li><li id="r-148296" data-claire-element-id="148296"><p id="r-148295" data-claire-element-id="148295">Le paramètre <strong>len</strong> indique le nombre d'octets à lire.</p></li><li id="r-148298" data-claire-element-id="148298"><p id="r-148297" data-claire-element-id="148297">De même, le dernier correspond au type d'envoi : il nous est également inutile, nous le mettrons donc aussi à 0.</p></li></ul><p id="r-148300" data-claire-element-id="148300">Nous recevrons les données envoyées comme cela par exemple :</p><pre id="r-148301" data-claire-element-id="148301"><code data-claire-semantic="c">recv(sock, buffer, sizeof(buffer), 0);</code></pre><aside id="r-148303" data-claire-element-id="148303" data-claire-semantic="warning"><p id="r-148302" data-claire-element-id="148302">Tout
+ comme la fonction send, sizeof(buffer) n'est pas toujours la bonne 
+taille à mettre pour le troisième paramètre. Pour cette fonction il ne 
+faut pas mettre une valeur plus grande que la taille du tableau 
+elle-même. Sinon, on risque de voir le programme boguer :p . Par 
+exemple, pour les chaînes de caractères nous devrions envoyer d'abord un
+ entier qui spécifie la taille de la chaine puis envoyer la chaine 
+elle-même (sans le caractère '\0'). Une autre méthode consiste à lire 
+les octets de la chaine un à un jusqu'à se que le caractère '\0' soit 
+trouvé mais cette méthode est moins performante que la précédente bien 
+qu'elle réduise la taille des données envoyées ;) .</p></aside><h6 id="r-la-fonction-shutdown" data-claire-element-id="148337">La fonction shutdown</h6><p id="r-148305" data-claire-element-id="148305">Voici le prototype de la dernière fonction : elle servira à fermer la transmission de données entre le serveur et le client.</p><pre id="r-148306" data-claire-element-id="148306"><code data-claire-semantic="c">int shutdown(int socket, int how);</code></pre><ul id="r-148313" data-claire-element-id="148313"><li id="r-148308" data-claire-element-id="148308"><p id="r-148307" data-claire-element-id="148307">la fonction retourne la valeur -1 en cas d'erreur, sinon elle retourne la valeur 0.</p></li><li id="r-148310" data-claire-element-id="148310"><p id="r-148309" data-claire-element-id="148309">Le premier paramètre désigne sur quel socket on doit fermer la connection.</p></li><li id="r-148312" data-claire-element-id="148312"><p id="r-148311" data-claire-element-id="148311">Le
+ deuxième paramètre définit où va se fermer la transition. Il peut 
+prendre trois valeurs : 0, pour fermer la socket en réception, 1, en 
+émission, 2 dans les deux sens.</p></li></ul><p id="r-148314" data-claire-element-id="148314">Nous l'utiliserons ainsi, si l'on se place du côté du serveur :</p><pre id="r-148315" data-claire-element-id="148315"><code data-claire-semantic="c">shutdown(sock, 2);</code></pre><p id="r-148316" data-claire-element-id="148316">Maintenant que nous avons tout, nous allons faire le point et améliorer nos deux applications.</p><h5 id="r-faisons-le-point-1" data-claire-element-id="148333">Faisons le point</h5><p id="r-148317" data-claire-element-id="148317">Nous
+ allons améliorer nos deux applications pour qu'elles se transmettent 
+des données : pour cela, nous allons nous servir des trois fonctions 
+précédemment apprises...</p><p id="r-148318" data-claire-element-id="148318">Nous allons du côté serveur envoyer un "bonjour" quand un client se connecte, puis fermer l'application.<br> Du côté client, nous allons recevoir la chaîne de caractères, et l'afficher à l'écran.</p><p id="r-148319" data-claire-element-id="148319">Vous pouvez vous lancer maintenant, ce n'est pas difficile ;) . Je suis même persuadé que vous pouvez le faire :p .</p><p id="r-148320" data-claire-element-id="148320">Codons ... ...<br> ... ... ... ...</p><p id="r-148321" data-claire-element-id="148321">C'est fini ! Voilà la correction ^^ :</p><p id="r-148322" data-claire-element-id="148322"></p><div id="r-148332" data-claire-element-id="148332"><div id="r-148327" data-claire-element-id="148327"><h6 id="r-l-application-serveur" data-claire-element-id="148324">L'application SERVEUR :</h6><pre id="r-148323" data-claire-element-id="148323"><code data-claire-semantic="c">#if defined (WIN32)
+    #include &lt;winsock2.h&gt;
+    typedef int socklen_t;
+#elif defined (linux)
+    #include &lt;sys/types.h&gt;
+    #include &lt;sys/socket.h&gt;
+    #include &lt;netinet/in.h&gt;
+    #include &lt;arpa/inet.h&gt;
+    #include &lt;unistd.h&gt;
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
+    #define closesocket(s) close(s)
+    typedef int SOCKET;
+    typedef struct sockaddr_in SOCKADDR_IN;
+    typedef struct sockaddr SOCKADDR;
+#endif
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#define PORT 23
+ 
+ 
+ 
+int main(void)
+{
+    #if defined (WIN32)
+        WSADATA WSAData;
+        int erreur = WSAStartup(MAKEWORD(2,2), &amp;WSAData);
+    #else
+        int erreur = 0;
+    #endif
+ 
+    SOCKET sock;
+    SOCKADDR_IN sin;
+    SOCKET csock;
+    SOCKADDR_IN csin;
+    char buffer[32] = "Bonjour !";
+    socklen_t recsize = sizeof(csin);
+    int sock_err;
+ 
+    /* Si les sockets Windows fonctionnent */
+    if(!erreur)
+    {
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+ 
+        /* Si la socket est valide */
+        if(sock != INVALID_SOCKET)
+        {
+            printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
+ 
+            /* Configuration */
+            sin.sin_addr.s_addr    = htonl(INADDR_ANY);   /* Adresse IP automatique */
+            sin.sin_family         = AF_INET;             /* Protocole familial (IP) */
+            sin.sin_port           = htons(PORT);         /* Listage du port */
+            sock_err = bind(sock, (SOCKADDR*)&amp;sin, sizeof(sin));
+ 
+            /* Si la socket fonctionne */
+            if(sock_err != SOCKET_ERROR)
+            {
+                /* Démarrage du listage (mode server) */
+                sock_err = listen(sock, 5);
+                printf("Listage du port %d...\n", PORT);
+ 
+                /* Si la socket fonctionne */
+                if(sock_err != SOCKET_ERROR)
+                {
+                    /* Attente pendant laquelle le client se connecte */
+                    printf("Patientez pendant que le client se connecte sur le port %d...\n", PORT);        
+ 
+                    csock = accept(sock, (SOCKADDR*)&amp;csin, &amp;recsize);
+                    printf("Un client se connecte avec la socket %d de %s:%d\n", csock, inet_ntoa(csin.sin_addr), htons(csin.sin_port));
+ 
+                    sock_err = send(csock, buffer, 32, 0);
+ 
+                    if(sock_err != SOCKET_ERROR)
+                        printf("Chaine envoyée : %s\n", buffer);
+                    else
+                        printf("Erreur de transmission\n");
+ 
+                    /* Il ne faut pas oublier de fermer la connexion (fermée dans les deux sens) */
+                    shutdown(csock, 2);
+                }
+            }
+ 
+            /* Fermeture de la socket */
+            printf("Fermeture de la socket...\n");
+            closesocket(sock);
+            printf("Fermeture du serveur terminee\n");
+        }
+ 
+        #if defined (WIN32)
+            WSACleanup();
+        #endif
+    }
+ 
+    /* On attend que l'utilisateur tape sur une touche, puis on ferme */
+    getchar();
+ 
+    return EXIT_SUCCESS;
+}</code></pre><h6 id="r-l-application-client" data-claire-element-id="148326">L'application CLIENT</h6><pre id="r-148325" data-claire-element-id="148325"><code data-claire-semantic="c">#if defined (WIN32)
+    #include &lt;winsock2.h&gt;
+    typedef int socklen_t;
+#elif defined (linux)
+    #include &lt;sys/types.h&gt;
+    #include &lt;sys/socket.h&gt;
+    #include &lt;netinet/in.h&gt;
+    #include &lt;arpa/inet.h&gt;
+    #include &lt;unistd.h&gt;
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
+    #define closesocket(s) close(s)
+    typedef int SOCKET;
+    typedef struct sockaddr_in SOCKADDR_IN;
+    typedef struct sockaddr SOCKADDR;
+#endif
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#define PORT 23
+ 
+ 
+ 
+int main(void)
+{
+    #if defined (WIN32)
+        WSADATA WSAData;
+        int erreur = WSAStartup(MAKEWORD(2,2), &amp;WSAData);
+    #else
+        int erreur = 0;
+    #endif
+ 
+    SOCKET sock;
+    SOCKADDR_IN sin;
+    char buffer[32] = "";
+ 
+    /* Si les sockets Windows fonctionnent */
+    if(!erreur)
+    {
+        /* Création de la socket */
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+ 
+        /* Configuration de la connexion */
+        sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+        sin.sin_family = AF_INET;
+        sin.sin_port = htons(PORT);
+ 
+        /* Si l'on a réussi à se connecter */
+        if(connect(sock, (SOCKADDR*)&amp;sin, sizeof(sin)) != SOCKET_ERROR)
+        {
+            printf("Connection à %s sur le port %d\n", inet_ntoa(sin.sin_addr), htons(sin.sin_port));
+            
+            /* Si l'on reçoit des informations : on les affiche à l'écran */
+            if(recv(sock, buffer, 32, 0) != SOCKET_ERROR)
+                printf("Recu : %s\n", buffer);
+        }
+        /* sinon, on affiche "Impossible de se connecter" */
+        else
+        {
+            printf("Impossible de se connecter\n");
+        }
+ 
+        /* On ferme la socket */
+        closesocket(sock);
+ 
+        #if defined (WIN32)
+            WSACleanup();
+        #endif
+    }
+ 
+    /* On attend que l'utilisateur tape sur une touche, puis on ferme */
+    getchar();
+ 
+    return EXIT_SUCCESS;
+}</code></pre></div><pre id="r-148328" data-claire-element-id="148328"><code data-claire-semantic="c">#if defined (WIN32)
+    #include &lt;winsock2.h&gt;
+    typedef int socklen_t;
+#elif defined (linux)
+    #include &lt;sys/types.h&gt;
+    #include &lt;sys/socket.h&gt;
+    #include &lt;netinet/in.h&gt;
+    #include &lt;arpa/inet.h&gt;
+    #include &lt;unistd.h&gt;
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
+    #define closesocket(s) close(s)
+    typedef int SOCKET;
+    typedef struct sockaddr_in SOCKADDR_IN;
+    typedef struct sockaddr SOCKADDR;
+#endif
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#define PORT 23
+ 
+ 
+ 
+int main(void)
+{
+    #if defined (WIN32)
+        WSADATA WSAData;
+        int erreur = WSAStartup(MAKEWORD(2,2), &amp;WSAData);
+    #else
+        int erreur = 0;
+    #endif
+ 
+    SOCKET sock;
+    SOCKADDR_IN sin;
+    SOCKET csock;
+    SOCKADDR_IN csin;
+    char buffer[32] = "Bonjour !";
+    socklen_t recsize = sizeof(csin);
+    int sock_err;
+ 
+    /* Si les sockets Windows fonctionnent */
+    if(!erreur)
+    {
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+ 
+        /* Si la socket est valide */
+        if(sock != INVALID_SOCKET)
+        {
+            printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
+ 
+            /* Configuration */
+            sin.sin_addr.s_addr    = htonl(INADDR_ANY);   /* Adresse IP automatique */
+            sin.sin_family         = AF_INET;             /* Protocole familial (IP) */
+            sin.sin_port           = htons(PORT);         /* Listage du port */
+            sock_err = bind(sock, (SOCKADDR*)&amp;sin, sizeof(sin));
+ 
+            /* Si la socket fonctionne */
+            if(sock_err != SOCKET_ERROR)
+            {
+                /* Démarrage du listage (mode server) */
+                sock_err = listen(sock, 5);
+                printf("Listage du port %d...\n", PORT);
+ 
+                /* Si la socket fonctionne */
+                if(sock_err != SOCKET_ERROR)
+                {
+                    /* Attente pendant laquelle le client se connecte */
+                    printf("Patientez pendant que le client se connecte sur le port %d...\n", PORT);        
+ 
+                    csock = accept(sock, (SOCKADDR*)&amp;csin, &amp;recsize);
+                    printf("Un client se connecte avec la socket %d de %s:%d\n", csock, inet_ntoa(csin.sin_addr), htons(csin.sin_port));
+ 
+                    sock_err = send(csock, buffer, 32, 0);
+ 
+                    if(sock_err != SOCKET_ERROR)
+                        printf("Chaine envoyée : %s\n", buffer);
+                    else
+                        printf("Erreur de transmission\n");
+ 
+                    /* Il ne faut pas oublier de fermer la connexion (fermée dans les deux sens) */
+                    shutdown(csock, 2);
+                }
+            }
+ 
+            /* Fermeture de la socket */
+            printf("Fermeture de la socket...\n");
+            closesocket(sock);
+            printf("Fermeture du serveur terminee\n");
+        }
+ 
+        #if defined (WIN32)
+            WSACleanup();
+        #endif
+    }
+ 
+    /* On attend que l'utilisateur tape sur une touche, puis on ferme */
+    getchar();
+ 
+    return EXIT_SUCCESS;
+}</code></pre><h6 id="r-l-application-client-1" data-claire-element-id="148330">L'application CLIENT</h6><pre id="r-148329" data-claire-element-id="148329"><code data-claire-semantic="c">#if defined (WIN32)
+    #include &lt;winsock2.h&gt;
+    typedef int socklen_t;
+#elif defined (linux)
+    #include &lt;sys/types.h&gt;
+    #include &lt;sys/socket.h&gt;
+    #include &lt;netinet/in.h&gt;
+    #include &lt;arpa/inet.h&gt;
+    #include &lt;unistd.h&gt;
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
+    #define closesocket(s) close(s)
+    typedef int SOCKET;
+    typedef struct sockaddr_in SOCKADDR_IN;
+    typedef struct sockaddr SOCKADDR;
+#endif
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#define PORT 23
+ 
+ 
+ 
+int main(void)
+{
+    #if defined (WIN32)
+        WSADATA WSAData;
+        int erreur = WSAStartup(MAKEWORD(2,2), &amp;WSAData);
+    #else
+        int erreur = 0;
+    #endif
+ 
+    SOCKET sock;
+    SOCKADDR_IN sin;
+    char buffer[32] = "";
+ 
+    /* Si les sockets Windows fonctionnent */
+    if(!erreur)
+    {
+        /* Création de la socket */
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+ 
+        /* Configuration de la connexion */
+        sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+        sin.sin_family = AF_INET;
+        sin.sin_port = htons(PORT);
+ 
+        /* Si l'on a réussi à se connecter */
+        if(connect(sock, (SOCKADDR*)&amp;sin, sizeof(sin)) != SOCKET_ERROR)
+        {
+            printf("Connection à %s sur le port %d\n", inet_ntoa(sin.sin_addr), htons(sin.sin_port));
+            
+            /* Si l'on reçoit des informations : on les affiche à l'écran */
+            if(recv(sock, buffer, 32, 0) != SOCKET_ERROR)
+                printf("Recu : %s\n", buffer);
+        }
+        /* sinon, on affiche "Impossible de se connecter" */
+        else
+        {
+            printf("Impossible de se connecter\n");
+        }
+ 
+        /* On ferme la socket */
+        closesocket(sock);
+ 
+        #if defined (WIN32)
+            WSACleanup();
+        #endif
+    }
+ 
+    /* On attend que l'utilisateur tape sur une touche, puis on ferme */
+    getchar();
+ 
+    return EXIT_SUCCESS;
+}</code></pre><pre id="r-148331" data-claire-element-id="148331"><code data-claire-semantic="c">#if defined (WIN32)
+    #include &lt;winsock2.h&gt;
+    typedef int socklen_t;
+#elif defined (linux)
+    #include &lt;sys/types.h&gt;
+    #include &lt;sys/socket.h&gt;
+    #include &lt;netinet/in.h&gt;
+    #include &lt;arpa/inet.h&gt;
+    #include &lt;unistd.h&gt;
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
+    #define closesocket(s) close(s)
+    typedef int SOCKET;
+    typedef struct sockaddr_in SOCKADDR_IN;
+    typedef struct sockaddr SOCKADDR;
+#endif
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#define PORT 23
+ 
+ 
+ 
+int main(void)
+{
+    #if defined (WIN32)
+        WSADATA WSAData;
+        int erreur = WSAStartup(MAKEWORD(2,2), &amp;WSAData);
+    #else
+        int erreur = 0;
+    #endif
+ 
+    SOCKET sock;
+    SOCKADDR_IN sin;
+    char buffer[32] = "";
+ 
+    /* Si les sockets Windows fonctionnent */
+    if(!erreur)
+    {
+        /* Création de la socket */
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+ 
+        /* Configuration de la connexion */
+        sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+        sin.sin_family = AF_INET;
+        sin.sin_port = htons(PORT);
+ 
+        /* Si l'on a réussi à se connecter */
+        if(connect(sock, (SOCKADDR*)&amp;sin, sizeof(sin)) != SOCKET_ERROR)
+        {
+            printf("Connection à %s sur le port %d\n", inet_ntoa(sin.sin_addr), htons(sin.sin_port));
+            
+            /* Si l'on reçoit des informations : on les affiche à l'écran */
+            if(recv(sock, buffer, 32, 0) != SOCKET_ERROR)
+                printf("Recu : %s\n", buffer);
+        }
+        /* sinon, on affiche "Impossible de se connecter" */
+        else
+        {
+            printf("Impossible de se connecter\n");
+        }
+ 
+        /* On ferme la socket */
+        closesocket(sock);
+ 
+        #if defined (WIN32)
+            WSACleanup();
+        #endif
+    }
+ 
+    /* On attend que l'utilisateur tape sur une touche, puis on ferme */
+    getchar();
+ 
+    return EXIT_SUCCESS;
+}</code></pre></div><aside id="r-148335" data-claire-element-id="148335" data-claire-semantic="information"><p id="r-148334" data-claire-element-id="148334">Au
+ lieu d'envoyer 32 octets de chaine de caractères (dans le cas ou 
+sizeof(char)=1) nous aurions pu n'envoyer que 10 octets (c'est la taille
+ de la chaine "Bonjour !"). Mais le problème qui se serait posé est que 
+l'application client ne connait pas la taille de la chaine envoyée par 
+le serveur. Il y a plusieurs solution pour régler ce problème comme 
+envoyer un nombre qui précède la chaine spécifiant sa taille ou de lire 
+la chaine de caractère reçu bits à bits jusqu'à se que l'on trouve le 
+caractère '\0'. Ici, pour faire simple, nous n'allons pas déployer ces 
+principes.</p></aside><p id="r-148336" data-claire-element-id="148336">Sachez que vous pouvez créer un fichier <em>header.h</em> qui contient les inclusions, <em>typedef</em>
+ et déclarations. Je ne l'ai pas fait pour éviter de vous perdre, avec 
+les fichiers (déjà pas facile, les sockets... avec deux applications :p 
+). C'est en temps normal vivement recommandé ^^ .</p>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">
+<span class="arrow"></span>
+<span class="next">La transmission de flux</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+<span class="next">Transmission d'une structure</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Transmissiond039unestructure"></a><h2>Transmission d'une structure</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+<span class="arrow"></span>
+<span class="next">Transmission d'une chaîne de caractères</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+<span class="next">Un problème de portabilité</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-transmission-d-une-structure" data-claire-element-id="148362">Transmission d'une structure</h4><aside id="r-148340" data-claire-element-id="148340" data-claire-semantic="warning"><p id="r-148339" data-claire-element-id="148339">La
+ transmission de structures, d'entiers (de type int, short, long...), de
+ nombres décimaux (double, float...), etc. Bref, tout ce qui n'est pas 
+une chaine de caractères ne fonctionne qu'en local. La transmission 
+d'autres choses que des chaines de caractères est expliquée à la fin de 
+ce chapitre.</p></aside><p id="r-148341" data-claire-element-id="148341">Comme nous l'avons vu, les fonctions <em>send</em> et <em>recv</em> permettent la transmission de nombres et de tableaux (dont les chaînes de caractères). Mais cela ne s'arrête pas là. <strong>Ces deux fonctions permettent aussi l'envoi de structures et même plus </strong>
+ :D ! Il suffira juste de donner un pointeur de la structure aux deux 
+fonctions et la taille que prend cette structure en mémoire ^^ . Bien 
+sûr, il faudra que les déclarations des structures soient présentes dans
+ les deux projets ;) .</p><p id="r-148342" data-claire-element-id="148342">Prenons
+ par exemple une structure Point contenant deux entiers correspondants 
+aux coordonnées X et Y du point. Eh bien au lieu de passer les données 
+par un tableau il vous suffira de passer l'adresse de cette structure (à
+ l'aide du symbole '&amp;'). Dans cet exemple, il n'est pas plus 
+difficile de passer les variables X et Y dans un tableau de 2 cases, 
+mais dans le cas d'une grosse structure cela peux vraiment vous aider. 
+Prenons maintenant une structure déclarée comme ci-dessous :</p><pre id="r-148343" data-claire-element-id="148343"><code data-claire-semantic="c">struct Joueur
+{
+    int ID;
+    char nom[256];
+    char prenom[256];
+};</code></pre><p id="r-148344" data-claire-element-id="148344">Eh bien 
+dans ce cas, l'envoi d'un tableau peut paraître délicat alors qu'en 
+envoyant une structure vous pourrez accéder facilement aux données 
+qu'elle comporte.</p><p id="r-148345" data-claire-element-id="148345">Passons donc maintenant à la pratique :) .<br> Nous allons créer une structure Personnage qui contiendra le nom, le prénom et l'âge de celui-ci :</p><pre id="r-148346" data-claire-element-id="148346"><code data-claire-semantic="c">struct Personnage
+{
+    char nom[256];
+    char prenom[256];
+    int age;
+};
+typedef struct Personnage Personnage;</code></pre><p id="r-148347" data-claire-element-id="148347">Rien de bien compliqué ^^ .<br> Comme dit plus haut, ce code devra être écrit dans les deux projets.<br> Ensuite nous allons déclarer une variable de type Personnage et remplir ses composantes :</p><pre id="r-148348" data-claire-element-id="148348"><code data-claire-semantic="c">Personnage monPersonnage;
+[...]
+sprintf(monPersonnage.nom, "Matin");
+sprintf(monPersonnage.prenom, "Dupont");
+monPersonnage.age = 29;</code></pre><p id="r-148349" data-claire-element-id="148349">Mon personnage se nommera donc Matin Dupont et aura 29 ans :p .</p><p id="r-148350" data-claire-element-id="148350">Maintenant, nous allons envoyer cette structure à un client en tant que serveur:</p><pre id="r-148351" data-claire-element-id="148351"><code data-claire-semantic="c">send(sock, &amp;monPersonnage, sizeof(monPersonnage), 0);</code></pre><p id="r-148352" data-claire-element-id="148352">Et le client va recevoir cette structure avec la fonction <em>recv</em> :</p><pre id="r-148353" data-claire-element-id="148353"><code data-claire-semantic="c">recv(sock, &amp;monPersonnage, sizeof(monPersonnage), 0)</code></pre><aside id="r-148355" data-claire-element-id="148355" data-claire-semantic="warning"><p id="r-148354" data-claire-element-id="148354">Du côté du client, la structure devra être déclarée. Elle sera automatiquement remplacée par la structure reçue.</p></aside><div id="r-148357" data-claire-element-id="148357" data-claire-semantic="question"><p id="r-148356" data-claire-element-id="148356">Et maintenant ... Comment peut-on accéder à la structure reçue du côté du client ?</p></div><p id="r-148358" data-claire-element-id="148358">Eh bien tous simplement comme n'importe quelle structure ^^ . Faîtes un petit <em>printf</em> avec comme paramètre <strong>monPersonnage.age</strong>,
+ vous verrez que la console vous affichera 29 (à part si vous avez mis 
+autre chose :p ). Il en est de même pour les deux autres paramètres.</p><p id="r-148359" data-claire-element-id="148359">Vous
+ l'avez peu être compris, vous pouvez transmettre tous les types de 
+données que vous voulez (int, char, long, structures, etc.) avec les 
+fonctions <em>send</em> et <em>recv</em> à condition que ce type soit déclaré dans le code serveur et aussi dans le code client.</p><aside id="r-148361" data-claire-element-id="148361" data-claire-semantic="warning"><p id="r-148360" data-claire-element-id="148360">Vous
+ remarquerez que les deux chaînes de caractères qui étaient contenues 
+dans nos structures disposaient d'une taille fixe (256 caractères avec 
+le caractère '\0' inclus). Si nous voulons ne pas avoir cette 
+limitation, il faut utiliser des pointeurs à la place et les allouer 
+dynamiquement. Mais cela pose un problème car en envoyant la structure 
+contenant les pointeurs on ne fait qu'envoyer la valeur des pointeurs 
+(là ou il pointe) mais pas les variables sur lesquels ils pointent. Il 
+faut donc envoyer aussi les données pointées par ces pointeurs ;) .</p></aside>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+<span class="arrow"></span>
+<span class="next">Transmission d'une chaîne de caractères</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+<span class="next">Un problème de portabilité</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Unproblmedeportabilit"></a><h2>Un problème de portabilité</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+<span class="arrow"></span>
+<span class="next">Transmission d'une structure</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">
+<span class="next">Les threads et les mutex</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-un-probleme-de-portabilite" data-claire-element-id="148378">Un problème de portabilité</h4><p id="r-148363" data-claire-element-id="148363">Jusque
+ là, nous avons transmis des données d'un ordinateur à un autre sans 
+faire attention aux types de données que nous transmettions. Mais cela 
+pose de sérieux problèmes de portabilité.<br> En effet, après avoir sûrement lu le cours de M@téo21 sur <a href="http://www.siteduzero.com/tutoriel-3-14061-l-allocation-dynamique.html#ss_part_1">l'allocation dynamique</a> vous avez appris que, par exemple, la taille d'une variable de type int peut varier d'un ordinateur à un autre.<br>
+ Donc, si nous envoyons une variable de type int à partir d'un 
+ordinateur où le type int fait 8 octets sur un autre ordinateur où le 
+type int fait 2 octets cela posera irrémédiablement problème : Pendant 
+que l'ordinateur source envoi une seule variable de type int codée sur 8
+ octets, l'ordinateur de destination se verra recevoir 4 variables de 
+type int :-° !<br> Ce problème pourrait être réglé en utilisant un type de données qui garde le même nombre d'octets d'un ordinateur à autre... <br>
+ Mais voilà qu'il y à un second problème : l'ordre des octets d'une 
+variable codée sur plusieurs octets n'est pas toujours le même non plus 
+:( . <br> Il y a plusieurs façon de représenter un groupe d'octets en 
+mémoire, on peut commencer par l'octet de poids fort ou par l'octet de 
+poids faible par exemple, cela s'appelle <a href="http://fr.wikipedia.org/wiki/Petit-boutiste">l'Endianness</a>
+ (ou boutisme en français). Si un groupe d'octet commence par l'octet de
+ poids fort on dit que sont orientation est big-endian, s'il commence 
+par l'octet de poids faible on dit que sont orientation est 
+little-endian. La façon d'organiser un groupe d'octet en mémoire dépend 
+de l'architecture de la machine.</p><h6 id="r-pour-resumer-2" data-claire-element-id="148377">Pour résumer...</h6><p id="r-148364" data-claire-element-id="148364">Si
+ votre application communique avec une autre application qui se trouve 
+sur le même ordinateur, il n'y aura donc pas de problème car la taille 
+des types de données ne change pas d'une application à une autre, de 
+même pour l'ordre des octets d'une variable en mémoire.<br> A contrario,
+ pour réaliser une communication portable entre deux ordinateurs, il 
+faut absolument transmettre les octets de nos variables un à un selon un
+ ordre donné qui est le même pour les deux applications distantes. Des 
+fonctions existent pour réaliser ces manipulations, nous allons donc 
+commencer par les étudier puis nous allons les utiliser dans le cadre 
+d'un exemple pour bien comprendre leur fonctionnement.</p><h5 id="r-fonctions-de-conversion" data-claire-element-id="148376">Fonctions de conversion</h5><p id="r-148365" data-claire-element-id="148365">Deux
+ groupes de fonctions de conversion de l'ordre des octets existe. Le 
+premier groupe de fonctions a pour but de convertir un entier qui à 
+l'endianness de votre ordinateur en un entier qui à l'endianness du 
+réseau qui est toujours en big-endian (octet de poids fort en première 
+position). Le second groupe de fonctions a pour but de faire la même 
+opération mais dans le sens opposé.</p><pre id="r-148366" data-claire-element-id="148366"><code data-claire-semantic="c">unsigned long htonl(unsigned long hostlong);
+
+unsigned short htons(unsigned short hostshort);
+
+unsigned long ntohl(unsigned long netlong);
+
+unsigned short ntohs(unsigned short netshort);</code></pre><p id="r-148367" data-claire-element-id="148367">La fonction htonl convertit l'entier de 4 octets hostlong depuis l'ordre des octets de l'hôte vers celui du réseau.<br> La fonction htons convertit l'entier de 2 octets hostshort depuis l'ordre des octets de l'hôte vers celui du réseau.</p><p id="r-148368" data-claire-element-id="148368">La fonction ntohl convertit l'entier de 4 octets netlong depuis l'ordre des octets du réseau vers celui de l'hôte.<br> La fonction ntohs convertit l'entier de 2 octets net­short depuis l'ordre des octets du réseau vers celui de l'hôte.</p><h6 id="r-un-exemple-de-fonctionnement-des-fonctions-htonl-et-ntohl" data-claire-element-id="148375">Un exemple de fonctionnement des fonctions htonl et ntohl</h6><p id="r-148369" data-claire-element-id="148369">Supposons
+ que vous vouliez transmettre un entier codée sur 4 octets à un autre 
+ordinateur de manière portable. Il va falloir décomposer l'entier en 4 
+parties et envoyer chaque octet un à un.<br> De même pour la réception sauf qu'il va juste falloir faire l'opération inverse.</p><pre id="r-148370" data-claire-element-id="148370"><code data-claire-semantic="c">void send4(int sock, unsigned long data)
+{
+    // Tableau d'octet qui sera ensuite envoyé
+    char dataSend[4];
+    
+    // On décompose l'entier 'data' de 4 octets en 4 parties de 1 octet
+    dataSend[0] = (data &gt;&gt; 24) &amp; 0xFF;  // On sélectionne l'octet de poids fort de 'data' que l'on met dans la première case du tableau d'octet 'dataSend'
+    dataSend[1] = (data &gt;&gt; 16) &amp; 0xFF;  // De même avec l'octet qui suit
+    dataSend[2] = (data &gt;&gt; 8) &amp; 0xFF;   // De même avec l'octet qui suit
+    dataSend[3] = (data &gt;&gt; 0) &amp; 0xFF;   // On sélectionne l'octet de poids faible de 'data' que l'on met dans la dernière case du tableau d'octet 'dataSend'
+
+    // On envoi les 4 octets dans un ordre qui ne change jamais quelque soit la machine
+    send(sock, dataSend, 4, 0);
+}
+
+void read4(int sock, unsigned long* data)
+{
+    char dataRecv[4];
+    
+    // On reçoit une suite de 4 octets, le premier octet reçu est toujours l'octet de poids fort
+    recv(sock, dataRecv, 4, 0);
+    
+    // On rassemble les 4 octets séparé en une seul variable de 4 octets
+    unsigned long temp = 0;
+    temp |= dataRecv[0] &lt;&lt; 24;
+    temp |= dataRecv[1] &lt;&lt; 16;
+    temp |= dataRecv[2] &lt;&lt; 8;
+    temp |= dataRecv[3] &lt;&lt; 0;
+    
+    // On fini par copier le résultat dans 'data'
+    *data = temp;
+}</code></pre><p id="r-148371" data-claire-element-id="148371">Ces deux 
+fonctions sont un peu lourdes donc je vous conseil d'utiliser plutôt les
+ fonctions de conversion spécifiées plus haut. Voici les même fonctions 
+send4 et read4 implémentées en utilisant les fonctions htonl et ntohl :</p><pre id="r-148372" data-claire-element-id="148372"><code data-claire-semantic="c">void send4(int sock, unsigned long data)
+{
+    // On convertit data en entier big-endian
+    long dataSend = htonl(data);
+    
+    // On envoie l'entier convertit
+    send(sock, (char*)&amp;dataSend, 4, 0);
+}
+
+void read4(int sock, unsigned long* data)
+{
+    long dataRecv;
+    
+    // On récupère l'entier en big-endian
+    recv(sock, (char*)&amp;dataRecv, 4, 0);
+    
+    // On convertit l'entier récupéré en little-endian si l'ordinateur 
+    // stock les entiers en mémoire en little-endian, sinon s'il les 
+    // stock en big-endian l'entier est convertit en big-endian
+    *data = ntohl(dataRecv);
+}</code></pre><p id="r-148373" data-claire-element-id="148373">Notez que si vous voulez envoyer un entier de 2 octets le fonctionnement est exactement le même :) .<br>
+ Pour ce qui est de la transmission de structures, il faudra envoyer 
+chaque éléments qui la compose un à un pour que le code reste portable.</p><p id="r-148374" data-claire-element-id="148374">Ce
+ chapitre est la base de la transmission de flux entre une application 
+serveur et application cliente. Il vous est maintenant possible de 
+transmettre tout ce que vous voulez entre les deux. Il est donc 
+essentiel.<br> Notez que nous n'avons pas parler du cas des nombres 
+réels (float, double, etc.) car c'est assez difficile de transmettre ces
+ nombres entre deux applications tout en restant portable. Mais rien ne 
+peut vous empêcher de convertir ces nombres en chaines de caractères ou 
+encore en nombres entiers après les avoir multipliés par 1000 par 
+exemple ;) .</p>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+<span class="arrow"></span>
+<span class="next">Transmission d'une structure</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">
+<span class="next">Les threads et les mutex</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Lesthreadsetlesmutex"></a><h2>Les threads et les mutex</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+<span class="arrow"></span>
+<span class="next">Un problème de portabilité</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+<span class="next">Quelques définitions</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div class="content">
+<p id="r-148380" data-claire-element-id="148380">Dans ce chapitre, nous 
+allons parler des threads, des processus et des mutex. Il est 
+relativement important car il constitue la partie théorique du cours sur
+ les threads et permet d'installer une bibliothèque nommée Pthread ;) .</p>
+</div><a name="Quelquesdfinitions"></a><h2>Quelques définitions</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">
+<span class="arrow"></span>
+<span class="next">Les threads et les mutex</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+<span class="next">Installation de pthread</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-quelques-definitions" data-claire-element-id="148401">Quelques définitions</h4><h5 id="r-les-processus" data-claire-element-id="148393">Les processus</h5><p id="r-148381" data-claire-element-id="148381">Un processus est une tâche qui est en train de s'exécuter.<br> Par exemple, quand vous lancez un de vos programmes que vous avez développé, votre <a href="http://fr.wikipedia.org/wiki/OS">OS</a>
+ crée un nouveau processus et celui-ci exécutera une suite 
+d'instructions sur votre ordinateur (le code de votre programme 
+compilé).</p><p id="r-148382" data-claire-element-id="148382"><cite>Citation : Wikipédia</cite></p><blockquote id="r-148391" data-claire-element-id="148391"><p id="r-148383" data-claire-element-id="148383">Un processus est défini par :</p><ul id="r-148390" data-claire-element-id="148390"><li id="r-148385" data-claire-element-id="148385"><p id="r-148384" data-claire-element-id="148384">Un ensemble d'instructions à exécuter</p></li><li id="r-148387" data-claire-element-id="148387"><p id="r-148386" data-claire-element-id="148386">Un espace mémoire pour les données de travail</p></li><li id="r-148389" data-claire-element-id="148389"><p id="r-148388" data-claire-element-id="148388">Éventuellement, d'autres ressources, comme des descripteurs de fichiers, des ports réseaux, etc...</p></li></ul></blockquote><p id="r-148392" data-claire-element-id="148392">Si
+ vous être sous Windows, vous pouvez accéder à la liste des processus 
+via un gestionnaire des tâches (en appuyant simultanément sur les 
+touches CTRL+ALT+SUPPR).<br> Sous linux, vous pouvez accéder à la liste des processus via un indicateur de performance.<br> Plus d'informations : <a href="http://fr.wikipedia.org/wiki/Processus_(informatique)">ici</a>.</p><h5 id="r-les-threads" data-claire-element-id="148395">Les threads</h5><p id="r-148394" data-claire-element-id="148394">Un
+ même processus peut se décomposer en plusieurs parties, qui vont 
+s'exécuter simultanément en partageant les mêmes données en mémoire. Ces
+ parties se nomment threads.<br> Du point de vue de l'utilisateur, les threads semblent se dérouler en parallèle.<br> Lorsqu'une fonction bloque par exemple un programme (comme la fonction <em>recv</em>),
+ si celui-ci dispose d'une interface graphique, il sera inactif tant que
+ la fonction le bloquera. Les threads nous permettront de régler ce 
+problème.<br> Plus d'informations : <a href="http://fr.wikipedia.org/wiki/Processus_l%C3%A9ger">ici</a>.</p><h5 id="r-les-mutex" data-claire-element-id="148397">Les mutex</h5><p id="r-148396" data-claire-element-id="148396">Il
+ est parfois nécessaire d'interdire momentanément certaines opérations 
+d'un ou plusieurs threads : par exemple, si plusieurs threads sont 
+amenés à lire une variable, faire des calculs avec puis la modifier en 
+fonction du résultat de ces calculs, il ne faut pas qu'ils le fassent en
+ même temps, sinon cela risque tous simplement de boguer.<br> Les mutex permettent donc d'éviter ces problèmes de synchronisation :) .<br> Plus d'informations : <a href="http://fr.wikipedia.org/wiki/Exclusion_mutuelle">ici</a>.</p><h5 id="r-pourquoi-choisir-la-bibliotheque-pthread" data-claire-element-id="148400">Pourquoi choisir la bibliothèque pthread ?</h5><p id="r-148398" data-claire-element-id="148398">Le terme Pthread est une abréviation de "POSIX Threads".<br> POSIX est lui un acronyme de "Portable Operating System Interface for UniX".</p><p id="r-148399" data-claire-element-id="148399">J'ai donc choisi pthread car c'est une très bonne bibliothèque <strong>portable</strong> permettant de manipuler les threads, les processus et les mutex assez facilement ;) .</p>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">
+<span class="arrow"></span>
+<span class="next">Les threads et les mutex</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+<span class="next">Installation de pthread</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Installationdepthread"></a><h2>Installation de pthread</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+<span class="arrow"></span>
+<span class="next">Quelques définitions</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+<span class="next">Les threads</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-installation-de-pthread" data-claire-element-id="148416">Installation de pthread</h4><h5 id="r-sous-windows-11" data-claire-element-id="148412">Sous Windows</h5><p id="r-148402" data-claire-element-id="148402">Sous Windows, cette bibliothèque n'est pas installée par défaut, il va donc falloir le faire.<br>
+ Nous allons dans un premier temps télécharger la bibliothèque puis 
+l'installer et ensuite nous pourrons l'utiliser dans nos programmes.</p><p id="r-148403" data-claire-element-id="148403">Vous pouvez obtenir la bibliothèque pthread en cliquant sur le lien qui suit :<br><a href="ftp://sourceware.org/pub/pthreads-win32/pthreads-w32-2-8-0-release.exe">Pthread - Win32 - Version 2.8.0</a></p><p id="r-148404" data-claire-element-id="148404">Commencez par ouvrir l'exécutable et cliquez sur le bouton "Extract".<br> Ainsi, trois dossiers sont créés dans le répertoire de l'exécutable.<br>
+ Le dossier "pthreads.2" contient les sources de la bibliothèque. Elles 
+vous seront utiles dans le cas où vous devriez compiler vous même la 
+bibliothèque.<br> Le dossier "Pre-built.2" contient les fichiers .h à inclure et les fichiers .lib à linker.<br> C'est donc ce dossier qui va nous intéresser, ouvrez le ;) .</p><p id="r-148405" data-claire-element-id="148405">Mettez
+ les fichiers .lib/.a dans le dossier "lib" de votre compilateur et les 
+headers (les fichiers .h) dans le dossier "include".</p><p id="r-148406" data-claire-element-id="148406">Petit rappel :<br> Pour ceux qui utilisent VC, prenez les fichiers ayant les extensions .lib.<br> Pour ceux qui utilisent Code::Blocks ou Dev-C++, prenez les fichiers ayant l'extension .a.</p><p id="r-148407" data-claire-element-id="148407">Une
+ fois la bibliothèque pthread installée, nous allons linker les fichiers
+ .lib/.a à notre projet et inclure les headers dans notre code. En 
+fonction de votre IDE et du langage que vous avez choisi d'utiliser, le 
+fichier linké ne sera pas le même :<br> Si vous faîtes du C, linkez le fichier "pthreadVC2.lib" pour VC et le fichier "libpthreadGCc.a" pour Code::Blocks et Dev-C++.<br>
+ Sinon si vous faîtes du C++, linkez le fichier "pthreadVCE2.lib" pour 
+VC et le fichier "libpthreadGCEc.a" pour Code::Blocks et Dev-C++.</p><p id="r-148408" data-claire-element-id="148408">Il en est de même pour les DLL ;) :<br> Si vous faîtes du C, prenez la DLL "pthreadVC2.dll" pour VC et la DLL "pthreadGC2.dll" pour Code::Blocks et Dev-C++.<br> Sinon si vous faîtes du C++, prenez la DLL "pthreadVCE2.dll" pour VC et la DLL "pthreadGCE2.dll" pour Code::Blocks et Dev-C++.<br> La DLL doit être mise dans le répertoire de votre projet.</p><p id="r-148409" data-claire-element-id="148409"><strong>Note :</strong><em>
+ Vous pouvez mettre la DLL dans le répertoire "X:\WINDOWS\system32\" (ou
+ X est le nom du disque dur contenant le dossier Windows). Ainsi, la DLL
+ n'a plus besoin d'être dans le répertoire de vos projets :) sur votre 
+ordinateur</em>.</p><p id="r-148410" data-claire-element-id="148410">Nous allons ensuite inclure pthread comme ceci :</p><pre id="r-148411" data-claire-element-id="148411"><code data-claire-semantic="c">#include &lt;pthread.h&gt;</code></pre><h5 id="r-sous-linux-8" data-claire-element-id="148415">Sous Linux</h5><p id="r-148413" data-claire-element-id="148413">Sous linux la bibliothèque est déjà installée normalement, vous n'aurez donc pas besoin de le faire :) .<br> Toutefois sachez que les sources utilisant les threads nécessitent une édition de lien avec la librairie pthread :</p><pre id="r-148414" data-claire-element-id="148414"><code data-claire-semantic="console">gcc&nbsp;nomSource.c&nbsp;-lpthread&nbsp;-o&nbsp;nomExecutable</code></pre>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+<span class="arrow"></span>
+<span class="next">Quelques définitions</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+<span class="next">Les threads</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Lesthreads"></a><h2>Les threads</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+<span class="arrow"></span>
+<span class="next">Installation de pthread</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">
+<span class="next">La selection de sockets</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-les-threads-1" data-claire-element-id="148479">Les threads</h4><p id="r-148417" data-claire-element-id="148417">Dans cette partie nous allons voir comment utiliser les threads avec la bibliothèque pthread.</p><h6 id="r-declarer-un-thread" data-claire-element-id="148420">Déclarer un thread</h6><p id="r-148418" data-claire-element-id="148418">Pour pouvoir utiliser notre thread, nous allons tout d'abord déclarer une variable de type pthread_t comme il suit.</p><pre id="r-148419" data-claire-element-id="148419"><code data-claire-semantic="c">pthread_t thread;</code></pre><h6 id="r-creer-un-thread" data-claire-element-id="148439">Créer un thread</h6><p id="r-148421" data-claire-element-id="148421">Une
+ fois que notre thread est déclaré, il va falloir le lier à une fonction
+ de notre choix, la fonction désignée se déroulera ensuite en parallèle 
+avec le reste de l'application. Pour réaliser cela nous allons utiliser 
+la fonction <em>pthread_create</em> dont le prototype est donné ci-dessous.</p><pre id="r-148422" data-claire-element-id="148422"><code data-claire-semantic="c">int pthread_create(pthread_t* thread, pthread_attr_t* attr, void*(*start_routine)(void*), void* arg);</code></pre><ul id="r-148433" data-claire-element-id="148433"><li id="r-148424" data-claire-element-id="148424"><p id="r-148423" data-claire-element-id="148423">En cas de succès la fonction renvoie 0. En cas d'erreur, la fonction renvoie un code d'erreur non nul.</p></li><li id="r-148426" data-claire-element-id="148426"><p id="r-148425" data-claire-element-id="148425">L'argument <strong>thread</strong> correspond au thread qui va exécuter la fonction.</p></li><li id="r-148428" data-claire-element-id="148428"><p id="r-148427" data-claire-element-id="148427">L'argument <strong>attr</strong>
+ indique les attributs du thread, ce paramètre ne nous intéresse pas, 
+nous mettrons donc celui-ci à NULL pour que les attributs par défaut 
+soient utilisés.</p></li><li id="r-148430" data-claire-element-id="148430"><p id="r-148429" data-claire-element-id="148429">L'argument <strong>start_routine</strong> correspond à la fonction à exécuter.</p></li><li id="r-148432" data-claire-element-id="148432"><p id="r-148431" data-claire-element-id="148431">L'argument <strong>arg</strong>
+ est un pointeur sur void qui sera passé à la fonction à exécuter. Si 
+vous n'avez aucun paramètre à passer, mettez ce paramètre à NULL.</p></li></ul><p id="r-148434" data-claire-element-id="148434">Toutefois,
+ pour éviter des erreurs de compilation, la fonction exécutée par le 
+thread créé devra toujours avoir le prototype suivant :</p><pre id="r-148435" data-claire-element-id="148435"><code data-claire-semantic="c">void* ma_fonction(void* data);</code></pre><p id="r-148436" data-claire-element-id="148436">Dans l'exemple qui suit, le thread <strong>thread</strong> va exécuter la fonction <em>ma_fonction</em> en parallèle avec comme paramètre l'entier <strong>valeur</strong>.</p><pre id="r-148437" data-claire-element-id="148437"><code data-claire-semantic="c">pthread_create(&amp;thread, NULL, ma_fonction, (void*)&amp;valeur);</code></pre><p id="r-148438" data-claire-element-id="148438">Pour le dernier argument, <strong>&amp;valeur</strong> sera un <code data-claire-semantic="c">int*</code>, mais pour le transformer en <code data-claire-semantic="c">void*</code> nous ferons un simple cast :) .</p><h6 id="r-attendre-la-fin-de-l-execution-d-un-thread" data-claire-element-id="148449">Attendre la fin de l'exécution d'un thread</h6><p id="r-148440" data-claire-element-id="148440">Une fois que notre thread est exécuté, il se peut que nous ayons besoin de savoir quand il se termine. <br> La fonction <em>pthread_join</em>
+ va permettre d'attendre la fin du thread c'est à dire la fin de 
+l'exécution de la fonction exécutée par celui-ci. Voici le prototype:</p><pre id="r-148441" data-claire-element-id="148441"><code data-claire-semantic="c">int pthread_join(pthread_t thread, void **thread_return);</code></pre><ul id="r-148448" data-claire-element-id="148448"><li id="r-148443" data-claire-element-id="148443"><p id="r-148442" data-claire-element-id="148442">En cas de succès, la fonction renvoie 0. En cas d'erreur, la fonction renvoie un code d'erreur non nul.</p></li><li id="r-148445" data-claire-element-id="148445"><p id="r-148444" data-claire-element-id="148444">L'argument <strong>thread</strong> correspond au thread à attendre.</p></li><li id="r-148447" data-claire-element-id="148447"><p id="r-148446" data-claire-element-id="148446">L'argument <strong>thread_return</strong> est un pointeur sur la valeur de retour du thread.</p></li></ul><h6 id="r-terminer-le-thread-courant" data-claire-element-id="148457">Terminer le thread courant</h6><p id="r-148450" data-claire-element-id="148450">Dans
+ certain cas, il est possible que la fonction principale d'un thread ne 
+se termine jamais, notamment lorsque l'on utilise une boucle infinie. 
+Dans ce cas, on doit forcer la fin de du thread avec la fonction <em>pthread_exit</em> :</p><pre id="r-148451" data-claire-element-id="148451"><code data-claire-semantic="c">void pthread_exit(void *retval);</code></pre><ul id="r-148456" data-claire-element-id="148456"><li id="r-148453" data-claire-element-id="148453"><p id="r-148452" data-claire-element-id="148452">La fonction ne renvoie rien.</p></li><li id="r-148455" data-claire-element-id="148455"><p id="r-148454" data-claire-element-id="148454">L'argument <strong>retval</strong>
+ est un pointeur sur void, il correspond à la valeur de retour du thread
+ qui exécute la fonction (si cette fonction est utilisée dans la 
+fonction principale du thread, cela équivaut à faire : <em>"return retval;"</em>).</p></li></ul><h6 id="r-terminer-un-thread" data-claire-element-id="148478">Terminer un thread</h6><p id="r-148458" data-claire-element-id="148458">Dans
+ de nombreux cas, il est possible que vous ayez à terminer un thread 
+depuis un autre. Par exemple, lorsque vous utiliserez les threads avec 
+les sockets, la fonction ci-dessous pourrait être utilisée pour expulser
+ des clients (associés à un thread) depuis le thread principal.</p><pre id="r-148459" data-claire-element-id="148459"><code data-claire-semantic="c">int pthread_cancel(pthread_t thread);</code></pre><ul id="r-148464" data-claire-element-id="148464"><li id="r-148461" data-claire-element-id="148461"><p id="r-148460" data-claire-element-id="148460">En cas de succès, la fonction renvoie 0. En cas d'erreur, la fonction renvoie un code d'erreur non nul.</p></li><li id="r-148463" data-claire-element-id="148463"><p id="r-148462" data-claire-element-id="148462">L'argument <strong>thread</strong> correspond au thread à terminer.</p></li></ul><aside id="r-148466" data-claire-element-id="148466" data-claire-semantic="warning"><p id="r-148465" data-claire-element-id="148465">La
+ mémoire de tous les threads d'un même processus peut être partagée ou 
+non. Dans le cas de la mémoire partagée, cela signifie que si on crée 
+dynamiquement une variable dans un thread, elle peut être lue dans un 
+autre (c'est le cas des variables globales par exemple). Dans le cas de 
+la mémoire privée, les variables crées dans un thread ne peuvent pas 
+être lue dans un autre (c'est le cas des objets locaux par exemple). Il 
+faut donc bien surveiller la mémoire qui est allouée dans un thread car 
+elle n'est pas automatiquement libérée à la fin du thread. Pensez donc à
+ libérer la mémoire qui a été allouée dynamiquement au cours du thread 
+avant sa destruction, si besoin est ^^ . Il faut aussi veiller à ne pas 
+désallouer la mémoire qui sera utilisée par un autre thread durant la 
+suite de l’exécution programme.</p></aside><h5 id="r-un-petit-exemple-2" data-claire-element-id="148477">Un petit exemple :</h5><pre id="r-148467" data-claire-element-id="148467"><code data-claire-semantic="c">// On inclue les fichiers standard et le header pthread.h
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;pthread.h&gt;
+ 
+void* maFonction(void* data);
+ 
+ 
+ 
+int main()
+{
+    int i;
+    
+    // On crée un thread
+    pthread_t thread;
+    
+    // Permet d'exécuter le fonction maFonction en parallèle
+    pthread_create(&amp;thread, NULL, maFonction, NULL);
+ 
+    // Affiche 50 fois 1
+    for(i=0 ; i&lt;50 ; i++)
+        printf("1");
+ 
+    // Attend la fin du thread créé
+    pthread_join(thread, NULL);
+    
+    return 0;
+}
+ 
+ 
+void* maFonction(void* data)
+{
+    int i;
+    
+    // Affiche 50 fois 2
+    for(i=0 ; i&lt;50 ; i++)
+        printf("2");
+    
+    return NULL;
+}</code></pre><p id="r-148468" data-claire-element-id="148468">Le résultat donné est le suivant :</p><pre id="r-148469" data-claire-element-id="148469"><code data-claire-semantic="console">1111111111222222222222222222222222222222222111111111111111111111111111111111112222222222222222211111</code></pre><p id="r-148470" data-claire-element-id="148470">Comme vous pouvez le voir, l'utilisation des threads permet d'exécuter une fonction en parallèle.</p><div id="r-148472" data-claire-element-id="148472" data-claire-semantic="question"><p id="r-148471" data-claire-element-id="148471">Mais pourquoi les nombres s'affichent par paquets ? Si les fonctions se lançaient en parallèle, je devrais obtenir 12121212...</p></div><p id="r-148473" data-claire-element-id="148473">Si les nombres s'affichent par paquet, c'est à cause de votre système d'exploitation et de votre processeur.<br> En effet, avec un processeur mono-coeur, la fonction principale (<em>main</em>) et la fonction exécuté par le thread créé (<em>maFonction</em>) ne se lance pas tout à fait en parallèle car votre OS va attribuer un temps d'exécution pour chaque thread.<br>
+ Votre OS va, par exemple, exécuter le code du thread n°1 de votre 
+processus pendant 8 ms, puis va exécuter le code du thread n°2 du même 
+processus aussi pendant 8 ms, etc. Il en est de même pour le 
+fonctionnement des processus ;) .<br> Ainsi, comme chaque thread est 
+exécuté à tour de rôle pendant un temps très court, vous avez 
+l'impression qu'ils se déroulent en parallèle ^^ . On appel ça 
+l’ordonnancement des thread.</p><p id="r-148474" data-claire-element-id="148474">Si
+ vous avez un processeur multi-coeurs cela n'est plus vraiment valable 
+car les deux threads peuvent réellement se dérouler en parallèle, et 
+c'est tout l'avantage des threads :) .<br> Par exemple, si vous disposez
+ d'un processeur qui dispose de deux coeurs ou plus et que votre 
+application lance deux threads simultanément, votre application sera 
+théoriquement jusqu'à deux fois plus rapide. De même avec quatre coeurs 
+ou plus et quatre threads votre application sera théoriquement jusqu'à 
+quatre fois plus rapide, etc. Par contre, avec deux coeurs et quatre 
+threads votre application sera jusqu'à deux fois plus rapide et non pas 
+quatre en théorie :p .</p><p id="r-148475" data-claire-element-id="148475">Ces
+ dernières années, le nombre de coeurs dans les processeurs ne cesse de 
+croître et donc il est de plus en plus intéressant de mettre en place 
+des solutions parallèles efficaces pour accélérer nos programmes.</p><p id="r-148476" data-claire-element-id="148476">Vous
+ avez surement observé que les thread et les mutex ont un fonctionnement
+ est assez simple à assimiler. Cependant, selon l'utilisation que l'on 
+en fait, cela peut très vite devenir une horreur. Il faut donc être 
+assez rigoureux quand on met en place des threads et surtout 
+particulièrement lorsque l'on utilise des mutex pour éviter par exemple 
+les problèmes inter-blocage ;) .</p>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+<span class="arrow"></span>
+<span class="next">Installation de pthread</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">
+<span class="next">La selection de sockets</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Laselectiondesockets"></a><h2>La selection de sockets</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+<span class="arrow"></span>
+<span class="next">Les threads</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+<span class="next">Le fonctionnement</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div class="content">
+<p id="r-148481" data-claire-element-id="148481">Bien que les threads 
+sont beaucoup utilisés dans le domaine du réseau, on utilise aussi un 
+autre moyen pour manipuler plusieurs sockets : la sélection de sockets.<br>
+ La sélection de socket est un principe un peu plus simple à comprendre 
+que l'utilisation de threads. Mais, ne vous faites pas d'illusions car 
+dans de nombreux cas vous aurez à utiliser les threads en plus de la 
+sélection de sockets. Dans cette partie, mon but sera de vous expliquer 
+quels sont les avantages et inconvénients de ces deux méthodes ;) .</p>
+</div><a name="Lefonctionnement"></a><h2>Le fonctionnement</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">
+<span class="arrow"></span>
+<span class="next">La selection de sockets</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+<span class="next">Un peu de pratique</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-le-fonctionnement-2" data-claire-element-id="148519">Le fonctionnement</h4><h5 id="r-le-fonctionnement-global" data-claire-element-id="148516">Le fonctionnement global</h5><p id="r-148482" data-claire-element-id="148482">La
+ sélection de sockets s'inscrit dans un fonctionnement évènementiel, 
+c'est à dire que tout se fait dans un seul thread et dans un seul et 
+même processus. Elle présente une alternative puissante à l'utilisation 
+des threads. Si vous avez lu le tutoriel de m@teo21 sur la SDL ou si 
+vous connaissez, par exemple, l'API Windows, ce principe vous est déjà 
+un peu familier :) .</p><p id="r-148483" data-claire-element-id="148483">Avant, avec l'utilisation des threads sans la sélection de sockets, nous avions un schéma similaire à celui-ci :</p><figure id="r-148485" data-claire-element-id="148486"><img id="r-148484" data-claire-element-id="148484" src="Tutoriel%20%20%20Les%20sockets_fichiers/uploads.png" alt="Image utilisateur"></figure><p id="r-148487" data-claire-element-id="148487">Et maintenant en utilisant la sélection de socket, nous avons ce schéma :</p><figure id="r-148489" data-claire-element-id="148490"><img id="r-148488" data-claire-element-id="148488" src="Tutoriel%20%20%20Les%20sockets_fichiers/uploads_004.png" alt="Image utilisateur"></figure><p id="r-148491" data-claire-element-id="148491">Notez que les schémas ci-dessus sont des <a href="http://fr.wikipedia.org/wiki/Grafcet">grafcets</a> :</p><ul id="r-148500" data-claire-element-id="148500"><li id="r-148493" data-claire-element-id="148493"><p id="r-148492" data-claire-element-id="148492">Chaque rectangle désigne donc une action (étape) repérée par un nombre unique.</p></li><li id="r-148495" data-claire-element-id="148495"><p id="r-148494" data-claire-element-id="148494">Chaque barre entre les actions désigne la condition pour que l'action suivante se réalise.</p></li><li id="r-148497" data-claire-element-id="148497"><p id="r-148496" data-claire-element-id="148496">Les étapes se déroulent dans l'ordre (l'étape 3 se déroule après l'étape 2 et ainsi de suite).</p></li><li id="r-148499" data-claire-element-id="148499"><p id="r-148498" data-claire-element-id="148498">On commence toujours par l'étape initiale (celle qui porte le numéro d'étape 0 et qui est encadré dans deux rectangles).</p></li></ul><p id="r-148501" data-claire-element-id="148501">Dans
+ le cas des threads, on crée une socket serveur, on liste les ports, 
+puis pour chaque clients qui se connecte on crée un thread qui lui est 
+approprié dans lequel la transmission entre le client et le serveur se 
+déroulera.</p><p id="r-148502" data-claire-element-id="148502">Dans le 
+cas de la sélection de sockets, on crée une socket serveur, on liste les
+ ports, puis on initialise les descripteurs. Ensuite, on sélectionne la 
+ou les socket(s) voulue(s) et pour chaque socket sélectionnée, on 
+regarde dans quel état elle se trouve (y a t-il des données à lire ? à 
+écrire ? etc.). Le tout ce fait dans un seul thread et dans un seul 
+processus.<br> Notez que la sélection de sockets est bloquante pendant 
+un temps que vous spécifiez ou non, c'est à dire que tant que l'état des
+ descripteurs ne change pas ou tant que le temps donné n'est pas 
+dépassé, la sélection reste bloquante. Si vous ne spécifiez pas de temps
+ alors seul un changement d'état des descripteurs débloquera la 
+sélection.</p><div id="r-148504" data-claire-element-id="148504" data-claire-semantic="question"><p id="r-148503" data-claire-element-id="148503">Qu'est ce qu'un descripteur de socket ?</p></div><p id="r-148505" data-claire-element-id="148505">Un
+ descripteur de socket est tout simplement une variable (un entier) qui 
+nous servira à manipuler la socket. L'état de cet entier peut nous 
+permettre de connaître si des données ont été reçues ou envoyées sur la 
+socket. Vous ne le savez peut être pas jusque là mais le type de 
+variable SOCKET est lui même un type de descripteur de socket. Le type 
+SOCKET n'est donc qu'un entier (int), néanmoins on préfère utiliser le 
+type SOCKET pour mieux comprendre les choses et respecter les normes.</p><div id="r-148507" data-claire-element-id="148507" data-claire-semantic="question"><p id="r-148506" data-claire-element-id="148506">Qu'est ce qu'un ensemble ?</p></div><p id="r-148508" data-claire-element-id="148508">Un ensemble est un type de variable permettant de connaître l'état du descripteur de socket. Il en existe trois :</p><ul id="r-148515" data-claire-element-id="148515"><li id="r-148510" data-claire-element-id="148510"><p id="r-148509" data-claire-element-id="148509">L'ensemble de lecture <em>readfds</em>, il permet de savoir si le client a envoyé des données sur la socket sélectionnée. Un appel à <em>recv</em> ne sera donc pas bloquant</p></li><li id="r-148512" data-claire-element-id="148512"><p id="r-148511" data-claire-element-id="148511">L'ensemble de écriture <em>writefds</em>, il permet de savoir si le client a reçu les données sur la socket sélectionnée. Un appel à <em>send</em> ne sera donc pas bloquant</p></li><li id="r-148514" data-claire-element-id="148514"><p id="r-148513" data-claire-element-id="148513">L'ensemble d'exception <em>exceptfds</em>, il permet de gérer les exceptions mais nous ne nous en servirons pas dans ce chapitre.</p></li></ul><h5 id="r-ce-qu-il-faut-donc-retenir" data-claire-element-id="148518">Ce qu'il faut donc retenir</h5><p id="r-148517" data-claire-element-id="148517">Vous
+ pouvez choisir si la sélection de sockets sera bloquante ou non quand 
+tel ou tel événement se produit en fonction des descripteurs que vous 
+lui transmettez.<br> Prenons le cas ou vous spécifiez la sélection d'une
+ socket client avec un descripteur en lecture seulement (on cherche à 
+savoir si l'on peut lire des données sur la socket, si c'est le cas cela
+ signifie que l'on a reçu des données sur cette socket ;) ) et un temps 
+limite de 50 ms : La sélection de la socket cliente est bloquante tant 
+qu'elle ne reçoit pas de données jusqu'à ce que 50 ms se soit écoulé, 
+après, la sélection rend la main (elle ne devient plus bloquante). La 
+valeur qu'elle retourne spécifie l'évènement qui a mis fin au blocage 
+(ici, le temps ou des données reçues peuvent mettre fin au blocage).</p>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">
+<span class="arrow"></span>
+<span class="next">La selection de sockets</span>
+</a>
+<a class="after" href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+<span class="next">Un peu de pratique</span>
+<span class="arrow"></span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div><a name="Unpeudepratique"></a><h2>Un peu de pratique</h2><div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+<span class="arrow"></span>
+<span class="next">Le fonctionnement</span>
+</a>
+</div>
+<hr class="top">
+<div class="clear"></div> <div id="content" role="article">
+<h4 id="r-un-peu-de-pratique-3" data-claire-element-id="148562">Un peu de pratique</h4><p id="r-148520" data-claire-element-id="148520">Je
+ m'en serais douté, vous avez surement eu du mal à comprendre ce qui a 
+été spécifié ci-dessus et je vous comprends car ce n'est pas très simple
+ :-° .<br> J'espère donc que la partie pratique vous sera plus parlante :) .</p><h5 id="r-l-initialisation-des-descripteurs" data-claire-element-id="148534">L'initialisation des descripteurs</h5><p id="r-148521" data-claire-element-id="148521">Pour
+ initialiser les descripteurs, nous allons utiliser des fonctions. Ces 
+fonctions nous permettront de lier une ou plusieurs sockets à des 
+ensembles. Par exemple, si nous voulons que la sélection d'une socket 
+cliente soit bloquante jusqu'à se qu'elle reçoive des données en 
+lecture, alors nous allons initialiser un ensemble de lecture et nous 
+allons lui ajouter cette socket. Si l'ensemble en lecture est vide cela 
+voudra dire qu'il n'y a rien à lire sur la socket. A l'inverse, si 
+l'ensemble n'est pas vide cela signifie que la socket a reçu des données
+ et que nous pouvons les lire.<br> De même, si nous voulons par exemple 
+que deux sockets clientes bloquent la sélection jusqu'à ce qu'elles 
+reçoivent des données en lecture, il suffira d'ajouter ces deux sockets à
+ un même ensemble de lecture ;) .<br> Pour faire cela nous somme face à quatre fonctions présenté ci-dessous.</p><h6 id="r-fd-set" data-claire-element-id="148524">FD_SET</h6><pre id="r-148522" data-claire-element-id="148522"><code data-claire-semantic="c">FD_SET(int fd, fd_set* set);</code></pre><p id="r-148523" data-claire-element-id="148523">Cette fonction ajoute le descripteur <strong>fd</strong> à l'ensemble <strong>set</strong>.<br> Le descripteur <strong>fd</strong> n'est rien d'autre qu'une socket mais comme dit plus haut, une socket est avant tout un type int.</p><h6 id="r-fd-isset" data-claire-element-id="148527">FD_ISSET</h6><pre id="r-148525" data-claire-element-id="148525"><code data-claire-semantic="c">FD_ISSET(int fd, fd_set* set);</code></pre><p id="r-148526" data-claire-element-id="148526">Cette fonction vérifie si le descripteur <strong>fd</strong> est contenu dans l'ensemble <strong>set</strong> après l'appel à select. <br> Par exemple, si l'ensemble <strong>set</strong> est un ensemble de lecture la fonction servira à savoir si la socket <strong>fd</strong> a reçu des données.</p><h6 id="r-fd-clr" data-claire-element-id="148530">FD_CLR</h6><pre id="r-148528" data-claire-element-id="148528"><code data-claire-semantic="c">FD_CLR(int fd, fd_set *set);</code></pre><p id="r-148529" data-claire-element-id="148529">Cette fonction supprime le descripteur <strong>fd</strong> de l'ensemble set.<br> Cette fonction est beaucoup moins utilisé que les trois autre mais n'en n'est pas pour au temps inutile.</p><h6 id="r-fd-zero" data-claire-element-id="148533">FD_ZERO</h6><pre id="r-148531" data-claire-element-id="148531"><code data-claire-semantic="c">FD_ZERO(fd_set *set);</code></pre><p id="r-148532" data-claire-element-id="148532">Cette fonction vide l'ensemble <strong>set</strong>. Cela revient à supprimer tout les descripteurs ajouté précédemment à l'ensemble.</p><h5 id="r-la-selection-de-la-socket" data-claire-element-id="148553">La sélection de la socket</h5><p id="r-148535" data-claire-element-id="148535">La sélection de sockets se fait via la fonction select qui détient le prototype suivant :</p><pre id="r-148536" data-claire-element-id="148536"><code data-claire-semantic="c">int select(int fdmax, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);</code></pre><ul id="r-148549" data-claire-element-id="148549"><li id="r-148538" data-claire-element-id="148538"><p id="r-148537" data-claire-element-id="148537">En
+ cas de réussite la fonction retourne le nombre de descripteurs dans les
+ ensembles. Si la fonction rend la main à l'application car le timeout a
+ expiré alors elle retourne 0, sinon en cas d'erreur la fonction 
+retourne -1.</p></li><li id="r-148540" data-claire-element-id="148540"><p id="r-148539" data-claire-element-id="148539">Le paramètre <strong>fdmax</strong> correspond au descripteur de socket le plus grand auquel on ajoute un. <br>
+ Une fois que vous avez ajouté des descripteurs de sockets au ensembles 
+vous allez chercher le descripteur le plus grand (vous savez maintenant 
+que les descripteurs de sockets sont de simples entiers avant tout ^^ ) 
+et le passer en paramètre à la fonction <em>select</em> tout en lui ajoutant un.</p></li><li id="r-148542" data-claire-element-id="148542"><p id="r-148541" data-claire-element-id="148541">Le paramètre <strong>readfds</strong>
+ correspond à l'ensemble de lecture. Si on ne veut pas recevoir des 
+données sur aucune des sockets sélectionnées, on peut mettre ce 
+paramètre à NULL.</p></li><li id="r-148544" data-claire-element-id="148544"><p id="r-148543" data-claire-element-id="148543">Le paramètre <strong>writefds</strong>
+ correspond à l'ensemble d'écriture. Si on ne veut pas envoyer des 
+données sur aucune des sockets sélectionnées, on peut mettre ce 
+paramètre à NULL.</p></li><li id="r-148546" data-claire-element-id="148546"><p id="r-148545" data-claire-element-id="148545">Le paramètre <strong>exceptfds</strong> correspond à l'ensemble d'exception. Nous le mettrons à NULL car en général, nous ne l'utiliserons pas.</p></li><li id="r-148548" data-claire-element-id="148548"><p id="r-148547" data-claire-element-id="148547">Le paramètre <strong>timeout</strong>
+ est une structure qui contient le temps limite d'attente de blocage de 
+la fonction. En général, nous le mettrons à NULL ce paramètre pour que 
+la fonction reste bloquante tant qu'elle ne reçoit pas de changements 
+d'états des descripteurs.</p></li></ul><aside id="r-148552" data-claire-element-id="148552" data-claire-semantic="warning"><p id="r-148550" data-claire-element-id="148550">Notez
+ que la recherche du descripteur de socket le plus grand n'est pas 
+toujours très rapide sur des serveurs qui peuvent avoir des centaines ou
+ même milliers de clients. On préférera alors faire la recherche du plus
+ grand descripteur seulement quand un client quitte le serveur ou qu'un 
+autre se connecte au lieu de le calculer à chaque fois avant 
+l'utilisation de la fonction select.</p><p id="r-148551" data-claire-element-id="148551">Notez
+ aussi que la fonction select peut modifier les ensembles qui lui sont 
+passés en paramètres. Nous redéfinirons alors à chaque fois les 
+descripteurs associés au ensembles avant l'utilisation de la fonction 
+select</p></aside><h5 id="r-un-exemple-2" data-claire-element-id="148561">Un exemple</h5><p id="r-148554" data-claire-element-id="148554">Voici un exemple de serveur multi-clients utilisant la sélection de sockets.<br> Le client se connecte au serveur puis est immédiatement déconnecté de celui-ci :</p><pre id="r-148555" data-claire-element-id="148555"><code data-claire-semantic="c">#if defined (WIN32)
+    #include &lt;winsock2.h&gt;
+    typedef int socklen_t;
+#elif defined (linux)
+    #include &lt;sys/types.h&gt;
+    #include &lt;sys/socket.h&gt;
+    #include &lt;netinet/in.h&gt;
+    #include &lt;arpa/inet.h&gt;
+    #include &lt;unistd.h&gt;
+    #define INVALID_SOCKET -1
+    #define SOCKET_ERROR -1
+    #define closesocket(s) close (s)
+    typedef int SOCKET;
+    typedef struct sockaddr_in SOCKADDR_IN;
+    typedef struct sockaddr SOCKADDR;
+#endif
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;errno.h&gt;
+
+#define PORT 23
+
+
+
+int main(void)
+{
+    #if defined (WIN32)
+        WSADATA WSAData;
+        int erreur = WSAStartup(MAKEWORD(2,2), &amp;WSAData);
+    #else
+        int erreur = 0;
+    #endif
+
+    SOCKADDR_IN sin;
+    SOCKET sock;
+    int recsize = sizeof sin;
+
+    int sock_err;
+
+    if(!erreur)
+    {
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+
+        if(sock != INVALID_SOCKET)
+        {
+            printf("La socket %d est maintenant ouverte en mode TCP/IP\n", sock);
+
+            sin.sin_addr.s_addr = htonl(INADDR_ANY);
+            sin.sin_family = AF_INET;
+            sin.sin_port = htons(PORT);
+            sock_err = bind(sock, (SOCKADDR*) &amp;sin, recsize);
+
+            if(sock_err != SOCKET_ERROR)
+            {
+                sock_err = listen(sock, 5);
+                printf("Listage du port %d...\n", PORT);
+
+                if(sock_err != SOCKET_ERROR)
+                {
+                    /* Création de l'ensemble de lecture */
+                    fd_set readfs;
+
+                    while(1)
+                    {
+                        /* On vide l'ensemble de lecture et on lui ajoute 
+                        la socket serveur */
+                        FD_ZERO(&amp;readfs);
+                        FD_SET(sock, &amp;readfs);
+
+                        /* Si une erreur est survenue au niveau du select */
+                        if(select(sock + 1, &amp;readfs, NULL, NULL, NULL) &lt; 0)
+                        {
+                            perror("select()");
+                            exit(errno);
+                        }
+
+                        /* On regarde si la socket serveur contient des 
+                        informations à lire */
+                        if(FD_ISSET(sock, &amp;readfs))
+                        {
+                            /* Ici comme c'est la socket du serveur cela signifie 
+                            forcement qu'un client veut se connecter au serveur. 
+                            Dans le cas d'une socket cliente c'est juste des 
+                            données qui serons reçues ici*/
+
+                            SOCKADDR_IN csin;
+                            int crecsize = sizeof csin;
+
+                            /* Juste pour l'exemple nous acceptons le client puis 
+                            nous refermons immédiatement après la connexion */
+                            SOCKET csock = accept(sock, (SOCKADDR *) &amp;csin, &amp;crecsize);
+                            closesocket(csock);
+
+                            printf("Un client s'est connecte\n");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #if defined (WIN32)
+        WSACleanup();
+    #endif
+
+    return EXIT_SUCCESS;
+}</code></pre><aside id="r-148557" data-claire-element-id="148557" data-claire-semantic="information"><p id="r-148556" data-claire-element-id="148556">Notez qu'une socket serveur reçoit des données en lecture que quand un client se connecte à celui-ci. Bien que, les fonctions <em>recv</em> et <em>accept</em>
+ soit bloquantes en temps normale, ici, elles ne le sont plus car on les
+ appellent lorsqu'il le faut (par exemple, on sait que la fonction <em>recv</em> ne sera pas bloquante si des données viennent d'être reçues).</p></aside><p id="r-148558" data-claire-element-id="148558">La
+ sélection de sockets est présentée, ici, pour une application serveur 
+mais sachez que le principe fonctionne aussi avec les applications 
+clientes.</p><p id="r-148559" data-claire-element-id="148559">La suite arrive bientôt :) ...</p><p id="r-148560" data-claire-element-id="148560">Merci
+ à Trist@n21 pour avoir corrigé une partie de ce tutoriel et merci à 
+-ed- pour avoir corrigé les points sombres du tutoriel :) .</p>
+<aside class="aside-menu">
+<ul class="content-menu" role="navigation">
+<li class="tuto">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets">Les sockets</a>
+</li>
+<li class="chapter">
+ 
+<a class="chapterLink" onmouseover="$(this).addClass('box-shadow-summary').next().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').next().removeClass('box-shadow-summary');">
+<span>Partie 1</span>
+Les sockets entre deux applications
+</a>
+<a class="chapterOpen" href="#" onmouseover="$(this).addClass('box-shadow-summary').prev().addClass('box-shadow-summary');" onmouseout="$(this).removeClass('box-shadow-summary').prev().removeClass('box-shadow-summary');">
+<span>+</span>
+</a>
+ 
+<ul class="subchapters">
+<li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/histoire-et-fonctionnement">Histoire et fonctionnement</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-d-histoire-5">
+Un peu d'histoire
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/leurs-fonctionnement">
+Leurs fonctionnement
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/manipulation-de-sockets">Manipulation de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-1-l-application-serveur">
+Partie 1 : L'application serveur
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/partie-2-l-application-client">
+Partie 2 : L'application client
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-transmission-de-flux">La transmission de flux</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-chaine-de-caracteres">
+Transmission d'une chaîne de caractères
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/transmission-d-une-structure">
+Transmission d'une structure
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-probleme-de-portabilite">
+Un problème de portabilité
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-et-les-mutex">Les threads et les mutex</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/quelques-definitions">
+Quelques définitions
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/installation-de-pthread">
+Installation de pthread
+</a>
+</li>
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/les-threads-1">
+Les threads
+</a>
+</li>
+</ul> </li> <li class="subchapter">
+<div>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/la-selection-de-sockets">La selection de sockets</a>
+<a class="subchapterOpen" href="#">
+<span>+</span>
+</a>
+</div>
+<ul class="subchapter-parts">
+<li>
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+Le fonctionnement
+</a>
+</li>
+<li class="active">
+<a href="http://62.4.17.167/informatique/tutoriels/les-sockets/un-peu-de-pratique-3">
+Un peu de pratique
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+</ul>
+</aside>
+</div>
+<div id="content-bottom-menu"></div>
+<hr>
+<div class="paginate-tuto">
+<a class="before" href="http://62.4.17.167/informatique/tutoriels/les-sockets/le-fonctionnement-2">
+<span class="arrow"></span>
+<span class="next">Le fonctionnement</span>
+</a>
+</div>
+<hr class="bottom">
+<div class="clear"></div> <div class="adBan">
+<script type="text/javascript">
+    if (window.innerWidth >= 728)
+    {
+        document.write('<div id="div-gpt-ad-1350977194635-8" class="megaban"></div>');
+        googletag.cmd.push(function() {
+            googletag.display('div-gpt-ad-1350977194635-8');
+        });
+    }
+            else
+        {
+            document.write('<div id="div-gpt-ad-1350977284180-8" class="miniban"></div>');
+            googletag.cmd.push(function() {
+                googletag.display('div-gpt-ad-1350977284180-8');
+            });
+        }
+    </script><div id="div-gpt-ad-1350977194635-8" class="megaban"></div>
+</div>
+<div class="clear"></div>
+
+
+</body><!-- Mirrored from 62.4.17.167/sdz/sdz/les-sockets.html by HTTrack Website Copier/3.x [XR&CO'2013], Sun, 27 Oct 2013 05:51:21 GMT --></html>
