@@ -1,0 +1,10 @@
+#Map PhilMatt
+#Config
+#Size (x,y)
+8,8
+#
+#Rocks positions (x,y)
+rock
+5,4
+4,1
+6,7
