@@ -10,6 +10,7 @@
 #include "struct.h"
 
 
+
 //Inclusion des librairies standards
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,3 +27,7 @@
 #include <netdb.h>
 #include <signal.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+
+
+

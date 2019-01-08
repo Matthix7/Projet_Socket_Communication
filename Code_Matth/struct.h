@@ -2,6 +2,8 @@
 /// au projet mises en placeau niveau du groupe.                     ///
 
 
+
+
 typedef struct transmission_vent{
 //communication du vent
 	int force_vent;

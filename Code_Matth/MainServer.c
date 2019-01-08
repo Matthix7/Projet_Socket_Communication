@@ -22,7 +22,8 @@
 
 int main(int argc, char **argv){
 	
-	printf("Succès global serveur\n");
+	int a = A;  //Attention gestion étrange des define: nécessite changement de base ici pour être pris en compte
+	printf("Succès global serveur, %d\n", a);
 	
 	
 	
