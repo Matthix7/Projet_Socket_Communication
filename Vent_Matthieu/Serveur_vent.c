@@ -22,10 +22,6 @@ typedef struct sockaddr SOCKADDR;
 #define PORT 6543
  
 
-int Force_vent = 0;
-char[2] Direction_vent = {'N','E'};
-
-
 
  
 int main(void)
@@ -79,7 +75,7 @@ int main(void)
                     
                     /* ######################## Transmission des données ################################## */
                     
-                    send(sock
+                    
                     
                     /* ################################################################################### */
                     
