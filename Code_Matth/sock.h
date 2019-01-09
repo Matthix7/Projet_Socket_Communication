@@ -20,7 +20,10 @@ typedef struct in_addr IN_ADDR;
 #define closesocket(s) close(s)
 
 #define PORTConnection  6530
+#define PORTWind 		6531
 #define PORTChat	 	6532
+#define PORTList        6533
+#define PORTUpdate      6534
 #define MAX_CLIENTS 	100
 #define BUF_SIZE	    1024
 
@@ -40,12 +43,12 @@ typedef struct{
 
 
 int init_connection_server(int port);
-void end_connection_server(SOCKET sock, SOCKET csock);
+void end_connection_server(SOCKET sock);
 int read_from_client(Client* clients, int current, int id_client, SOCKET sock, char *buffer);
 void removeClient(Client *clients, int to_remove, int *current);
 void write_to_client(SOCKET sock, const char *buffer);
 void sendMessage(Client *clients, Client sender, int current, const char *buffer, char from_server);
-
+void clearClients(Client *clients, int current);
 
 
 ////////////////////////////////////////////////////////////////////////

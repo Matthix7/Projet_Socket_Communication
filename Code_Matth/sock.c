@@ -29,11 +29,6 @@ int init_connection_server(int port){
 	SOCKET sock;
 	socklen_t recsize = sizeof(sin);
 
-	/* Socket et contexte d'adressage du client */
-	SOCKADDR_IN csin;
-	SOCKET csock;
-	socklen_t crecsize = sizeof(csin);
-
 	int sock_err;
 
 	/* Création d'une socket */
@@ -76,10 +71,8 @@ int init_connection_server(int port){
 ///////////////////          Fin de la connection           ////////////
 ////////////////////////////////////////////////////////////////////////
 
-void end_connection_server(SOCKET sock, SOCKET csock)
+void end_connection_server(SOCKET sock)
 {
-    printf("Fermeture de la socket client\n");
-	closesocket(csock);
 	printf("Fermeture de la socket serveur\n");
 	closesocket(sock);
 	printf("Fermeture du serveur terminée\n");
@@ -112,17 +105,34 @@ int read_from_client(Client* clients, int current, int id_client, SOCKET sock, c
 }
 
 
+//////////////        Fermeture des communications          ////////////
+////////////////////////////////////////////////////////////////////////
+void clearClients(Client *clients, int current)
+{
+	int i = 0;
+	for(i = 0; i < current; i++)
+	{
+		closesocket(clients[i].sConnection);
+		closesocket(clients[i].sChat);
+		closesocket(clients[i].sWind);
+		closesocket(clients[i].sList);
+		closesocket(clients[i].sUpdate);
+	}
+}
+
+
+
 ///////////////////          Suppression du client          ////////////
 ////////////////////////////////////////////////////////////////////////
 
 void removeClient(Client *clients, int to_remove, int *current)
 {
 	/* we close active sockets */
-	closesocket(clients[to_remove].sConnection);
+	//closesocket(clients[to_remove].sConnection);
     closesocket(clients[to_remove].sChat);
-    closesocket(clients[to_remove].sWind);
-    closesocket(clients[to_remove].sList);
-    closesocket(clients[to_remove].sUpdate);
+    //closesocket(clients[to_remove].sWind);
+    //closesocket(clients[to_remove].sList);
+    //closesocket(clients[to_remove].sUpdate);
 	
    /* we remove the client in the array */
    memmove(clients + to_remove, clients + to_remove + 1, (*current - to_remove - 1) * sizeof(Client));
