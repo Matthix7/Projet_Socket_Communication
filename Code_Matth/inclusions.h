@@ -1,14 +1,8 @@
 /// Code Include, regroupe toutes les inclusions nécessaires       ///
 /// au projet pour alléger l'écriture des autres fichiers.         ///
 
-
-//Inclusion des fonctions des autres fichiers
-//#include "sea.h"
-//#include "boat.h"
-//#include "wind.h"
-#include "sock.h"
-#include "struct.h"
-
+#ifndef INC_H
+#define INC_H
 
 
 //Inclusion des librairies standards
@@ -30,4 +24,14 @@
 #include <arpa/inet.h>
 
 
+//Inclusion des fonctions des autres fichiers
+//#include "sea.h"
+//#include "boat.h"
+//#include "wind.h"
+#include "sock.h"
+#include "struct.h"
 
+#include "sock.c"
+
+
+#endif

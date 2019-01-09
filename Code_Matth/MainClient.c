@@ -20,11 +20,22 @@
 /////////////////////     MAIN     /////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char **argv){
-	
-	printf("Succès global client\n");
-	
-	
-	
-	return EXIT_SUCCESS;
+int main(int argc, char **argv)
+{
+	if(argc < 2)
+    {
+      printf("Usage : %s [address] [nickname]\n", argv[0]);
+      return EXIT_FAILURE;
+    }
+    
+    char* address = argv[1];
+    SOCKET socketChat = init_connection_client(address, PORTChat);
+    printf("Connexion à socketChat sur le port 6532\n");
+    end_connection_client(socketChat);
+    
+    
+    
+    
+
+    return EXIT_SUCCESS;
 }

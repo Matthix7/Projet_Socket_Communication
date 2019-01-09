@@ -170,12 +170,12 @@ static void proc(void)
                Client client = clients[i];
                int c = readClient(clients[i].sChat, buffer);
                //client disconnected 
-               if(c == 0)
+               if( c == 0 )
                {
                   closesocket(clients[i].sChat);
                   removeClient(clients, i, &current);
                   strncpy(buffer, client.name, BUF_SIZE - 1);
-                  strncat(buffer, " disconnected !", BUF_SIZE - strlen(buffer) - 1);
+                  strncat(buffer, " absent !", BUF_SIZE - strlen(buffer) - 1);
                   sendMessage(clients, client, current, buffer, 1); //send to all clients for now #broadcast maggle
                }
                else
