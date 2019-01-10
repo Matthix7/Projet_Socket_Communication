@@ -1,10 +1,10 @@
 # Projet_OS
-Mise en place de communications entre des bateaux (clients) et un serveur par utilisation des moyens vus en cours d'OS.
+Mise en place de communications entre des bateaux (clients) et un serveur par utilisation des moyens vus en cours d'OS.      \n
 
 # Fonctionnalités actuelles: 
-Connection au serveur
-Communication et enregistrement du nom du bateau dans une liste de clients connectés au serveur
-Création d'un channel de tchat commun à tous les clients
+Connection au serveur\n
+Communication et enregistrement du nom du bateau dans une liste de clients connectés au serveur\n
+Création d'un channel de tchat commun à tous les clients\n
 
 # Fonctionnement
 Utiliser la commande $make pour compiler les fichiers MainServer.c et MainClient.c
