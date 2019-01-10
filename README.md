@@ -7,7 +7,7 @@ Communication et enregistrement du nom du bateau dans une liste de clients conne
 Création d'un channel de tchat commun à tous les clients   
 
 ## Fonctionnement
-Utiliser la commande $make pour compiler les fichiers MainServer.c et MainClient.c   
+Utiliser la commande `$make` pour compiler les fichiers MainServer.c et MainClient.c   
 Dans un terminal, démarrer le serveur en utilisant la commande `$./MainServer`   
 Dans d'autres terminaux, connecter des clients en utilisant la commande `$./MainClient [addresseServeur] [nickname]`    
 Les clients sont alors connectés au channel de tchat et peuvent communiquer entre eux.    
