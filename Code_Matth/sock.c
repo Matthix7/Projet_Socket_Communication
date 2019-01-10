@@ -75,28 +75,21 @@ void end_connection_server(SOCKET sock)
 {
 	printf("Fermeture de la socket serveur\n");
 	closesocket(sock);
-	printf("Fermeture du serveur terminée\n");
 }
 
 
 ///////////////////       Réception données clients         ////////////
-////////////////////   déconnection du client si erreur   ///////////////
+////////////////////////////////////////////////////////////////////////
 
-int read_from_client(Client* clients, int current, int id_client, SOCKET sock, char *buffer)
+int read_from_client(SOCKET sock, char *buffer)
 {
    int n = recv(sock, buffer, BUF_SIZE - 1, 0);
-   Client client = clients[id_client]; 
-   
-   if( (n == SOCKET_ERROR) || (buffer[0] == 'q'))
+      
+   if (n == SOCKET_ERROR)
    {
       perror("recv()");
       /* if recv error we disconnect the client */
       n = 0;
-      
-      strncpy(buffer, client.name, BUF_SIZE - 1);
-	  removeClient(clients, id_client, &current);
-	  strncat(buffer, " disconnected !", BUF_SIZE - strlen(buffer) - 1);
-	  sendMessage(clients, client, current, buffer, 1); //broadcast alert
    }
 
    buffer[n] = 0;
@@ -194,39 +187,40 @@ void sendMessage(Client *clients, Client sender, int current, const char *buffer
 ///////////////////     Initialisation de la connection     ////////////
 ////////////////////////////////////////////////////////////////////////
 
-int init_connection_client(const char *address, int port)
+SOCKET init_connection_client(const char *address, int port)
 {
 	/* Création de la socket */
-   SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
-   SOCKADDR_IN sin = { 0 };
-   struct hostent *hostinfo;
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+	SOCKADDR_IN sin = { 0 };
+	struct hostent *hostinfo;
 
-   if(sock == INVALID_SOCKET)
-   {
-      perror("socket()");
-      exit(errno);
-   }
+	if(sock == INVALID_SOCKET)
+	{
+		perror("socket()");
+		exit(errno);
+	}
 
-   hostinfo = gethostbyname(address);
-   if (hostinfo == NULL)
-   {
-      fprintf (stderr, "Unknown host %s.\n", address);
-      exit(EXIT_FAILURE);
-   }
+	hostinfo = gethostbyname(address);
+	if (hostinfo == NULL)
+	{
+		fprintf (stderr, "Unknown host %s.\n", address);
+		exit(EXIT_FAILURE);
+	}
    
 	/* Configuration de la connexion */
-   sin.sin_addr = *(IN_ADDR *) hostinfo->h_addr;
-   sin.sin_port = htons(port);
-   sin.sin_family = AF_INET;
+	sin.sin_addr = *(IN_ADDR *) hostinfo->h_addr;
+	sin.sin_port = htons(port);
+	sin.sin_family = AF_INET;
 	
 	/* Si le client n'arrive pas à se connecter */
-   if(connect(sock,(SOCKADDR *) &sin, sizeof(sin)) == SOCKET_ERROR)
-   {
-      perror("Impossible de se connecter\n");
-      exit(errno);
-   }
-
-   return sock;
+	if(connect(sock,(SOCKADDR *) &sin, sizeof(sin)) == SOCKET_ERROR)
+	{
+		perror("Impossible de se connecter\n");
+		exit(errno);
+	}
+	
+	printf("Connexion à %s sur le port %d\n", inet_ntoa(sin.sin_addr), htons(sin.sin_port));
+	return sock;
 }
 
 

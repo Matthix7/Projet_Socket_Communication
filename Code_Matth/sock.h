@@ -44,7 +44,7 @@ typedef struct{
 
 int init_connection_server(int port);
 void end_connection_server(SOCKET sock);
-int read_from_client(Client* clients, int current, int id_client, SOCKET sock, char *buffer);
+int read_from_client(SOCKET sock, char *buffer);
 void removeClient(Client *clients, int to_remove, int *current);
 void write_to_client(SOCKET sock, const char *buffer);
 void sendMessage(Client *clients, Client sender, int current, const char *buffer, char from_server);

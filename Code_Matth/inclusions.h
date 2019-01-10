@@ -29,7 +29,7 @@
 //#include "boat.h"
 //#include "wind.h"
 #include "sock.h"
-#include "struct.h"
+//#include "struct.h"
 
 #include "sock.c"
 
