@@ -2,7 +2,7 @@
 Mise en place de communications entre des bateaux (clients) et un serveur par utilisation des moyens vus en cours d'OS.  
 
 ## Fonctionnalités actuelles: 
-Connection au serveur   
+Connexion au serveur   
 Communication et enregistrement du nom du bateau dans une liste de clients connectés au serveur   
 Création d'un channel de tchat commun à tous les clients   
 
