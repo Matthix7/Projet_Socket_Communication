@@ -28,10 +28,13 @@
 //#include "sea.h"
 //#include "boat.h"
 //#include "wind.h"
+#include "struct.h"
 #include "sock.h"
-//#include "struct.h"
+#include "connection_chat.h"
+
 
 #include "sock.c"
-
+#include "connection_chat_client.c"
+#include "connection_chat_server.c"
 
 #endif

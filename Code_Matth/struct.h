@@ -1,7 +1,28 @@
 /// Code Structures, regroupe toutes les structures nécessaires      ///
 /// au projet mises en placeau niveau du groupe.                     ///
 
+#include "inclusions.h"
 
+
+
+typedef int SOCKET;
+#define MAX_CLIENTS 	100
+#define BUF_SIZE	    1024
+
+
+typedef struct{
+ /* Données inhérentes au client
+  /!\ probablement incompatible avec les structures du groupe. */
+   SOCKET sConnection;
+   SOCKET sChat;
+   SOCKET sWind;
+   SOCKET sList;
+   SOCKET sUpdate;
+   int x;
+   int y;
+   char name[BUF_SIZE];
+   pthread_t thread_connection_chat;
+}Client;
 
 
 typedef struct transmission_vent{

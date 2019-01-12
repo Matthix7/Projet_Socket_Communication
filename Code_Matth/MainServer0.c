@@ -15,8 +15,6 @@
 ////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char **argv){
-	int a = A;  //Attention gestion étrange des define: nécessite changement élémentaire ici pour être pris en compte
-	printf("Succès global serveur, %d\n\n", a);
 	
 	char buffer[BUF_SIZE];
 	int current = 0; //Nombre actuel de clients

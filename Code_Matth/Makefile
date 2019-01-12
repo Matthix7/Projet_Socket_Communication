@@ -4,11 +4,13 @@
 
 default: MainServer MainClient
 
-MainServer: MainServer.c
-	gcc -g MainServer.c -o MainServer
+MainServer: MainServer0.c
+	gcc -pthread -o MainServer MainServer0.c
 
-MainClient: MainClient.c
-	gcc -Wall -g MainClient.c -o MainClient
+
+MainClient: MainClient0.c
+	gcc -pthread -o MainClient MainClient0.c
+	
 
 
 execServer: MainServer

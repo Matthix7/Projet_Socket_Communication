@@ -24,21 +24,6 @@ typedef struct in_addr IN_ADDR;
 #define PORTChat	 	6532
 #define PORTList        6533
 #define PORTUpdate      6534
-#define MAX_CLIENTS 	100
-#define BUF_SIZE	    1024
-
-typedef struct{
- /* Données inhérentes au client
-  /!\ probablement incompatible avec les structures du groupe. */
-   SOCKET sConnection;
-   SOCKET sChat;
-   SOCKET sWind;
-   SOCKET sList;
-   SOCKET sUpdate;
-   int x;
-   int y;
-   char name[BUF_SIZE];
-}Client;
 
 
 
@@ -76,7 +61,5 @@ void write_to_server(SOCKET sock, const char *buffer);
 
 
 
-
-#define A 10 //test
 
 #endif

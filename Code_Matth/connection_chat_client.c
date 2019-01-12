@@ -1,26 +1,23 @@
-/// Code Main, regroupe toutes les fonctionnalités nécessaires       ///
-/// au projet actuellement mises en place pour le fonctionnement     ///
-/// côté client.                                                     ///
+/// Code relatif à l'enregistrement et à la discussion entre clients.///
 
 
 //Inclusions nécessaires
 #include "inclusions.h"
 
 
-
-
-
-
-////////////////////////////////////////////////////////////////////////
-/////////////////////     MAIN     /////////////////////////////////////
+///////   Gestion de la conection et des discussions côté client  //////
 ////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char **argv)
+void* connection_chat_client(void* argument)
 {
+	Arg* arg = argument;
+	int argc = arg->argc;
+	char **argv = arg->argv;
+	
 	if(argc < 2)
     {
       printf("Usage : %s [address] [nickname]\n", argv[0]);
-      return EXIT_FAILURE;
+      return NULL;
     }
     
     char buffer[BUF_SIZE];
@@ -83,5 +80,25 @@ int main(int argc, char **argv)
     end_connection_client(socketChat);
     end_connection_client(socketConnection);
     
-    return EXIT_SUCCESS;
 }
+
+
+////////    Exécution en parallèle de la fonction précédente    ////////
+////////////////////////////////////////////////////////////////////////
+
+int create_thread_client_connection_chat(Client client, int argc, char **argv){
+	Arg* arg = malloc(sizeof *arg);
+	arg->argc = argc;
+	arg->argv = argv;
+	int res = pthread_create( & client.thread_connection_chat, NULL, connection_chat_client, arg);
+	if (res) {free(arg); printf("Thread de chat non créé");}
+	return res;
+}
+
+
+
+
+
+
+
+	
