@@ -26,6 +26,8 @@ int main(int argc, char **argv)
 	
 	fd_set rdfs;
 	
+	int selfID;
+	
     SOCKET socketConnection = init_connection_client(address, PORTConnection);
     SOCKET socketChat = init_connection_client(address, PORTChat);
     int max = socketChat;
@@ -43,6 +45,7 @@ int main(int argc, char **argv)
 
 		/* add the socket */
 		FD_SET(socketChat, &rdfs);
+		FD_SET(socketConnection, &rdfs);
 
 		if(select(max + 1, &rdfs, NULL, NULL, NULL) == -1){
 			perror("select()");

@@ -10,7 +10,8 @@
 ///////  Gestion de la conection et des discussions côté serveur  //////
 ////////////////////////////////////////////////////////////////////////
 
-
+/*
+ 
 void* connection_chat_server(){
 		
 	char buffer[BUF_SIZE];
@@ -19,7 +20,7 @@ void* connection_chat_server(){
 	
 	fd_set rdfs; 
 	
-	/* creation of service sockets */
+	// creation of service sockets 
 	SOCKET socketConnection = init_connection_server(PORTConnection);
 	SOCKET socketChat = init_connection_server(PORTChat);
 	
@@ -30,14 +31,14 @@ void* connection_chat_server(){
 		int i = 0;
 		FD_ZERO(&rdfs);
 
-		/* add STDIN_FILENO */
+		// add STDIN_FILENO 
 		FD_SET(STDIN_FILENO, &rdfs);
 		
-		/* add connection socket */
+		// add connection socket 
 		FD_SET(socketChat, &rdfs);
 		FD_SET(socketConnection, &rdfs);
 		
-		/* add socket for each client */
+		// add socket for each client 
 		for(i = 0; i < current; i++){
 			FD_SET(clients[i].sChat, &rdfs);
 			FD_SET(clients[i].sConnection, &rdfs);
@@ -48,10 +49,10 @@ void* connection_chat_server(){
 			exit(errno);
 		}
 		
-		/* something from standard input : i.e keyboard */
+		// something from standard input : i.e keyboard 
 		if(FD_ISSET(STDIN_FILENO, &rdfs))
 		{
-			/*Information venant du clavier serveur*/
+			// Information venant du clavier serveur
 			fgets(buffer, BUF_SIZE - 1, stdin);
 			
             char *p = NULL;
@@ -64,7 +65,7 @@ void* connection_chat_server(){
 		}
 		
 		else if(FD_ISSET(socketConnection, &rdfs)){
-			/* Un nouveau client se connecte aux services */
+			// Un nouveau client se connecte aux services 
 			printf("Patientez pendant qu'un client se connecte sur le port %d...\n", PORTConnection);
 			SOCKADDR_IN csin = { 0 };
 			socklen_t crecsize = sizeof(csin);
@@ -79,14 +80,14 @@ void* connection_chat_server(){
 			
 			int cChatSock = accept(socketChat, (SOCKADDR *)&csin, &crecsize);
 			
-			/* On complète les services du client et ses infos*/
+			// On complète les services du client et ses infos
 			Client c = {NULL};
 			c.sConnection = cConnectionSock;
 			c.sChat = cChatSock;
 			
-			/* after connecting the client sends its name */
+			// after connecting the client sends its name 
 			if(read_from_client(cConnectionSock, buffer) == -1){
-				/* disconnected */
+				// disconnected 
 				continue;
 			}
 			
@@ -102,7 +103,7 @@ void* connection_chat_server(){
 		else {
 			int i = 0;
 			for(i = 0; i < current; i++){
-				
+								
 				// a client is talking 
 				if(FD_ISSET(clients[i].sChat, &rdfs)) {
 					
@@ -144,11 +145,13 @@ void* connection_chat_server(){
 
 
 int create_thread_server_connection_chat(){
-	pthread_t server_connection_chat;
-	int res = pthread_create( & server_connection_chat, NULL, connection_chat_server, NULL);
+	printf("c");
+	pthread_t thread_server_connection_chat;
+	int res = pthread_create( & thread_server_connection_chat, NULL, connection_chat_server, NULL);
+	printf("d");
 	if (res) {printf("Thread de chat non créé");}
 	return res;
 }
 
 
-
+*/

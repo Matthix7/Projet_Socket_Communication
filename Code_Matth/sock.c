@@ -100,16 +100,16 @@ int read_from_client(SOCKET sock, char *buffer)
 
 //////////////        Fermeture des communications          ////////////
 ////////////////////////////////////////////////////////////////////////
-void clearClients(Client *clients, int current)
+void clearClients(Client **clients, int current)
 {
 	int i = 0;
 	for(i = 0; i < current; i++)
 	{
-		closesocket(clients[i].sConnection);
-		closesocket(clients[i].sChat);
-		closesocket(clients[i].sWind);
-		closesocket(clients[i].sList);
-		closesocket(clients[i].sUpdate);
+		closesocket(clients[i]->sConnection);
+		closesocket(clients[i]->sChat);
+		closesocket(clients[i]->sWind);
+		closesocket(clients[i]->sList);
+		closesocket(clients[i]->sUpdate);
 	}
 }
 
@@ -118,11 +118,11 @@ void clearClients(Client *clients, int current)
 ///////////////////          Suppression du client          ////////////
 ////////////////////////////////////////////////////////////////////////
 
-void removeClient(Client *clients, int to_remove, int *current)
+void removeClient(Client **clients, int to_remove, int *current)
 {
 	/* we close active sockets */
 	//closesocket(clients[to_remove].sConnection);
-    closesocket(clients[to_remove].sChat);
+    closesocket(clients[to_remove]->sChat);
     //closesocket(clients[to_remove].sWind);
     //closesocket(clients[to_remove].sList);
     //closesocket(clients[to_remove].sUpdate);
@@ -151,7 +151,7 @@ void write_to_client(SOCKET sock, const char *buffer)
 ///////////////////    Envoi d'un message en broadcast      ////////////
 ////////////////////////////////////////////////////////////////////////
 
-void sendMessage(Client *clients, Client sender, int current, const char *buffer, char from_server)
+void sendMessage(Client **clients, Client *sender, int current, const char *buffer, char from_server)
 {
    int i = 0;
    char message[BUF_SIZE];
@@ -159,15 +159,15 @@ void sendMessage(Client *clients, Client sender, int current, const char *buffer
    for(i = 0; i < current; i++)
    {
       /* we don't send message to the sender */
-      if(sender.sChat != clients[i].sChat)
+      if(sender->sChat != clients[i]->sChat)
       {
          if(from_server == 0)
          {
-            strncpy(message, sender.name, BUF_SIZE - 1);
+            strncpy(message, sender->name, BUF_SIZE - 1);
             strncat(message, " : ", sizeof message - strlen(message) - 1);
          }
          strncat(message, buffer, sizeof message - strlen(message) - 1);
-         write_to_client(clients[i].sChat, message);
+         write_to_client(clients[i]->sChat, message);
       }
    }
 }

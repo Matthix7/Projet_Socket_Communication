@@ -10,19 +10,7 @@ typedef int SOCKET;
 #define BUF_SIZE	    1024
 
 
-typedef struct{
- /* Données inhérentes au client
-  /!\ probablement incompatible avec les structures du groupe. */
-   SOCKET sConnection;
-   SOCKET sChat;
-   SOCKET sWind;
-   SOCKET sList;
-   SOCKET sUpdate;
-   int x;
-   int y;
-   char name[BUF_SIZE];
-   pthread_t thread_connection_chat;
-}Client;
+
 
 
 typedef struct transmission_vent{
@@ -54,3 +42,36 @@ typedef struct transmission_tchat{
 	int dst;
 	char buf[250];
 } t_tchat;
+
+
+
+
+
+typedef struct{
+ /* Données inhérentes au client
+  /!\ probablement incompatible avec les structures du groupe. */
+   SOCKET sConnection;
+   SOCKET sChat;
+   SOCKET sWind;
+   SOCKET sList;
+   SOCKET sUpdate;
+   
+   pthread_t thread_connection_chat;
+   
+   int x;
+   int y;
+   
+   int ID;
+   char name[BUF_SIZE];
+   
+   t_vent Wind;
+   
+   int toto;
+   
+}Client;
+
+
+
+
+
+

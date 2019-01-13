@@ -1,12 +1,10 @@
 /// Code Main, regroupe toutes les fonctionnalités nécessaires       ///
 /// au projet actuellement mises en place pour le fonctionnement     ///
-/// côté serveur.                                                     ///
+/// côté serveur.                                                    ///
 
-
+	
 //Inclusions nécessaires
 #include "inclusions.h"
-
-
 
 
 
@@ -15,12 +13,12 @@
 ////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char **argv){
-	
+		
 	char buffer[BUF_SIZE];
 	int current = 0; //Nombre actuel de clients
-	Client clients[MAX_CLIENTS]; //Liste des clients
+	Client* clients[MAX_CLIENTS]; //Liste des clients
 	
-	fd_set rdfs; 
+	fd_set rdfs;
 	
 	/* creation of service sockets */
 	SOCKET socketConnection = init_connection_server(PORTConnection);
@@ -30,7 +28,8 @@ int main(int argc, char **argv){
 	max = socketChat > max ? socketChat : max;
 	
 	while (1) {
-		int i = 0;
+		int identifiant = 1;
+		
 		FD_ZERO(&rdfs);
 
 		/* add STDIN_FILENO */
@@ -41,9 +40,9 @@ int main(int argc, char **argv){
 		FD_SET(socketConnection, &rdfs);
 		
 		/* add socket for each client */
-		for(i = 0; i < current; i++){
-			FD_SET(clients[i].sChat, &rdfs);
-			FD_SET(clients[i].sConnection, &rdfs);
+		for(int i = 0; i < current; i++){
+			FD_SET(clients[i]->sChat, &rdfs);
+			FD_SET(clients[i]->sConnection, &rdfs);
 		}
 		
 		if(select(max + 1, &rdfs, NULL, NULL, NULL) == -1){
@@ -54,8 +53,21 @@ int main(int argc, char **argv){
 		/* something from standard input : i.e keyboard */
 		if(FD_ISSET(STDIN_FILENO, &rdfs))
 		{
-			/* stop process when type on keyboard */
-			break;
+			/*Information venant du clavier serveur*/
+			fgets(buffer, BUF_SIZE - 1, stdin);
+			
+			// Récupération de la chaîne de caractère tapée en terminal
+            char *p = NULL;
+            p = strstr(buffer, "\n");
+            if(p != NULL){*p = 0;}
+            else{buffer[BUF_SIZE - 1] = 0;}
+            
+            // Condition de shutdown
+            char* exitCondition = "Quit";  //Ecrire "Quit" pour une déconnection client propre
+			if (strcmp(exitCondition, buffer)==0){break;}
+			
+			// Modification du vent
+			
 		}
 		
 		else if(FD_ISSET(socketConnection, &rdfs)){
@@ -75,9 +87,10 @@ int main(int argc, char **argv){
 			int cChatSock = accept(socketChat, (SOCKADDR *)&csin, &crecsize);
 			
 			/* On complète les services du client et ses infos*/
-			Client c = {NULL};
-			c.sConnection = cConnectionSock;
-			c.sChat = cChatSock;
+			Client* c = malloc(sizeof(Client));
+			c->sConnection = cConnectionSock;
+			c->sChat = cChatSock;
+			c->ID = identifiant;
 			
 			/* after connecting the client sends its name */
 			if(read_from_client(cConnectionSock, buffer) == -1){
@@ -85,10 +98,11 @@ int main(int argc, char **argv){
 				continue;
 			}
 			
-			strncpy(c.name, buffer, BUF_SIZE - 1);
+			strncpy(c->name, buffer, BUF_SIZE - 1);
 			clients[current] = c;
 			current++;	
-			printf("Nom recu: %s \n", c.name);
+			identifiant ++;
+			printf("Nom reçu: %s \n", c->name);
 			max = cConnectionSock > max ? cConnectionSock : max;
 			max = cChatSock > max ? cChatSock : max;
 			FD_SET(cChatSock, &rdfs);
@@ -99,19 +113,30 @@ int main(int argc, char **argv){
 			for(i = 0; i < current; i++){
 				
 				// a client is talking 
-				if(FD_ISSET(clients[i].sChat, &rdfs)) {
+				if(FD_ISSET(clients[i]->sChat, &rdfs)) {
 					
-					Client client = clients[i];
-					int c = read_from_client(clients[i].sChat, buffer);
+					Client* client = clients[i];
 					
-					//client disconnected 
+									
+					///////////////////////////////////////////////////
+					///////////////////////////////////////////////////
+					printf("Toto %d : %d\n", i, client->toto);
+					int err = create_thread_client_connection_chat(client);
+					if(err){printf("Marche pas");}
+					if (!err) {printf("Thread de chat créé\n");}
+					///////////////////////////////////////////////////
+					///////////////////////////////////////////////////
+					
+					
+					int c = read_from_client(client->sChat, buffer);
+					
+					//client disconnected
 					if( c == 0 ) {
 						
-						strncpy(buffer, client.name, BUF_SIZE - 1);
+						strncpy(buffer, client->name, BUF_SIZE - 1);
 						strncat(buffer, " absent !", BUF_SIZE - strlen(buffer) - 1);
-						printf("Message envoyé : %s\n", client.name);
 						sendMessage(clients, client, current, buffer, 1); //broadcast alert
-						closesocket(clients[i].sChat);
+						closesocket(clients[i]->sChat);
 						removeClient(clients, i, &current);
 						printf("Il reste %d clients\n", current);
 					}
@@ -119,12 +144,12 @@ int main(int argc, char **argv){
 					else{
 						sendMessage(clients, client, current, buffer, 0);
 					}
+										
 					break;
 				}
 			}
 		}
 	}
-	
 	clearClients(clients, current);
 	end_connection_server(socketConnection);
 	end_connection_server(socketChat);
