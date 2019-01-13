@@ -173,6 +173,7 @@ int main(int argc, char **argv){
 			}
 		}
 	}
+	sleep(2); //Attente que les fermetures clients se fassent bien, en cas de non respect de l'ordre de fermeture
 	clearClients(clients, current);	
 	end_connection_server(socketConnection);
 	end_connection_server(socketChat);
