@@ -51,6 +51,19 @@ int main(int argc, char **argv)
 			perror("select()");
 			exit(errno);
 		}
+		
+		
+		if(FD_ISSET(socketConnection, &rdfs)){
+			/*Le serveur donne l'ID*/
+			int n = read_from_server(socketConnection, buffer);
+			//  server down 
+			if(n == 0){printf("Server disconnected !\n");break;}
+			else{
+				selfID = atoi(buffer);
+				printf("I am ID %d\n", selfID);
+			}
+		}	
+		
       
 		if(FD_ISSET(socketChat, &rdfs)){
 			/*Information venant du serveur*/

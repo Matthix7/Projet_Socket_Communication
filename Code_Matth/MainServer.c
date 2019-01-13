@@ -27,8 +27,10 @@ int main(int argc, char **argv){
 	int max = socketConnection;
 	max = socketChat > max ? socketChat : max;
 	
+	int identifiant = 0;
+	
 	while (1) {
-		int identifiant = 1;
+		
 		
 		FD_ZERO(&rdfs);
 
@@ -100,9 +102,14 @@ int main(int argc, char **argv){
 			
 			strncpy(c->name, buffer, BUF_SIZE - 1);
 			clients[current] = c;
-			current++;	
-			identifiant ++;
+			current++;
+			identifiant ++;	
 			printf("Nom reçu: %s \n", c->name);
+			
+			//On lui renvoit son identifiant
+			sprintf(buffer, "%d", identifiant);
+			write_to_client(cConnectionSock, buffer);
+			
 			max = cConnectionSock > max ? cConnectionSock : max;
 			max = cChatSock > max ? cChatSock : max;
 			FD_SET(cChatSock, &rdfs);
@@ -120,10 +127,10 @@ int main(int argc, char **argv){
 									
 					///////////////////////////////////////////////////
 					///////////////////////////////////////////////////
-					printf("Toto %d : %d\n", i, client->toto);
-					int err = create_thread_client_connection_chat(client);
-					if(err){printf("Marche pas");}
-					if (!err) {printf("Thread de chat créé\n");}
+					//printf("Toto %d : %d\n", i, client->toto);
+					//int err = create_thread_client_connection_chat(client);
+					//if(err){printf("Marche pas");}
+					//if (!err) {printf("Thread de chat créé\n");}
 					///////////////////////////////////////////////////
 					///////////////////////////////////////////////////
 					
