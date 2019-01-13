@@ -6,7 +6,7 @@ Connexion au serveur
 Communication et enregistrement du nom du bateau dans une liste de clients connectés au serveur   
 Utilisation d'un channel de tchat commun à tous les clients permettant l'envoi de messages communs   
 Modification des paramètres de vent affectant les bateaux
-Déconnection
+Déconnexion
 
 ## Fonctionnement
 Utiliser la commande `$make` pour compiler les fichiers MainServer.c et MainClient.c   
