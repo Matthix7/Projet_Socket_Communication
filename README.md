@@ -15,6 +15,6 @@ Dans d'autres terminaux, connecter des clients en utilisant la commande `$./Main
 Les clients sont alors connectés au channel de tchat et peuvent communiquer entre eux par simple entrée clavier dans leurs terminaux.    
 La modification de la force et de la direction du vent se fait depuis le terminal du serveur par la commande `$Wind [Force][Direction]`.
  Exemple: `$Wind 3N`. Cette commande modifie des valeurs utilisables par chaque client, pour un calcul de déplacement par exemple.
-  Ces valeurs ne sont cependant pas traitées actuellement. 
+  Ces valeurs ne sont cependant pas traitées actuellement.    
 Pour quitter: taper `"$Quit"` dans le terminal d'un client, il sera déconnecté.   
 Quand tous les clients sont déconnectés, taper `"$Quit"` dans le terminal du serveur entraîne sa déconnection.   
