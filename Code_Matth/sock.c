@@ -140,39 +140,57 @@ void removeClient(Client **clients, int to_remove, int *current)
 
 void write_to_client(SOCKET sock, const char *buffer)
 {
-   if(send(sock, buffer, strlen(buffer), 0) < 0)
-   {
-      perror("send()");
-      exit(errno);
-   }
+	/*
+	t_tchat* dataChat = {NULL};
+	dataChat->src = sender->id;
+	dataChat->dst = receiver->id;
+	dataChat->buf = buffer;
+	*/
+	
+	if(send(sock, buffer, strlen(buffer), 0) < 0)
+	{
+		perror("send()");
+		exit(errno);
+	}
 }
 
 
-///////////////////    Envoi d'un message en broadcast      ////////////
+///////////    Envoi d'un message discussion en broadcast      /////////
 ////////////////////////////////////////////////////////////////////////
 
-void sendMessage(Client **clients, Client *sender, int current, const char *buffer, char from_server)
+void sendMessageChat(Client **clients, Client *sender, int current, const char *buffer, char from_server)
 {
-   int i = 0;
-   char message[BUF_SIZE];
-   message[0] = 0;
-   for(i = 0; i < current; i++)
-   {
-      /* we don't send message to the sender */
-      if(sender->sChat != clients[i]->sChat)
-      {
-         if(from_server == 0)
-         {
-            strncpy(message, sender->name, BUF_SIZE - 1);
-            strncat(message, " : ", sizeof message - strlen(message) - 1);
-         }
-         strncat(message, buffer, sizeof message - strlen(message) - 1);
-         write_to_client(clients[i]->sChat, message);
-      }
-   }
+	int i = 0;
+	char message[BUF_SIZE];
+	message[0] = 0;
+	for(i = 0; i < current; i++)
+	{
+		/* we don't send message to the sender */
+		if(sender == NULL || sender->sChat != clients[i]->sChat)
+		{
+			if(from_server == 0)
+			{
+				strncpy(message, sender->name, BUF_SIZE - 1);
+				strncat(message, " : ", sizeof message - strlen(message) - 1);
+			}
+         			 
+			strncat(message, buffer, sizeof message - strlen(message) - 1);
+			write_to_client(clients[i]->sChat, message);
+		}
+	}
 }
 
+////////    Envoi d'un message modification vent en broadcast     //////
+////////////////////////////////////////////////////////////////////////
 
+void sendMessageWind(Client **clients, int current, const char *buffer)
+{
+	int i = 0;
+	for(i = 0; i < current; i++)
+	{
+		write_to_client(clients[i]->sWind, buffer);				
+	}
+}
 
 
 

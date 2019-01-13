@@ -17,20 +17,19 @@ int main(int argc, char **argv){
 	char buffer[BUF_SIZE];
 	int current = 0; //Nombre actuel de clients
 	Client* clients[MAX_CLIENTS]; //Liste des clients
+	int identifiant = 0;
 	
 	fd_set rdfs;
 	
 	/* creation of service sockets */
 	SOCKET socketConnection = init_connection_server(PORTConnection);
 	SOCKET socketChat = init_connection_server(PORTChat);
+	SOCKET socketWind = init_connection_server(PORTWind);
 	
 	int max = socketConnection;
 	max = socketChat > max ? socketChat : max;
 	
-	int identifiant = 0;
-	
 	while (1) {
-		
 		
 		FD_ZERO(&rdfs);
 
@@ -40,11 +39,13 @@ int main(int argc, char **argv){
 		/* add connection socket */
 		FD_SET(socketChat, &rdfs);
 		FD_SET(socketConnection, &rdfs);
+		FD_SET(socketWind, &rdfs);
 		
 		/* add socket for each client */
 		for(int i = 0; i < current; i++){
 			FD_SET(clients[i]->sChat, &rdfs);
 			FD_SET(clients[i]->sConnection, &rdfs);
+			FD_SET(clients[i]->sWind, &rdfs);
 		}
 		
 		if(select(max + 1, &rdfs, NULL, NULL, NULL) == -1){
@@ -69,7 +70,15 @@ int main(int argc, char **argv){
 			if (strcmp(exitCondition, buffer)==0){break;}
 			
 			// Modification du vent
-			
+			char* windCondition = "Wind";  //Ecrire "Wind [Force][Direction]" pour modifier les paramètres du vent
+			if (strncmp(windCondition, buffer, 4)==0){
+				int force = atoi(&buffer[5]);
+				int direction = buffer[6];
+				printf("Valeur du vent modifiée à %d%c\n", force, direction);
+				char newVal[2]; newVal[0] = buffer[5]; newVal[1] = buffer[6];
+				sendMessageWind(clients, current, newVal);
+				
+				}
 		}
 		
 		else if(FD_ISSET(socketConnection, &rdfs)){
@@ -87,11 +96,13 @@ int main(int argc, char **argv){
 			
 			
 			int cChatSock = accept(socketChat, (SOCKADDR *)&csin, &crecsize);
+			int cWindSock = accept(socketWind, (SOCKADDR *)&csin, &crecsize);
 			
 			/* On complète les services du client et ses infos*/
 			Client* c = malloc(sizeof(Client));
 			c->sConnection = cConnectionSock;
 			c->sChat = cChatSock;
+			c->sWind = cWindSock;
 			c->ID = identifiant;
 			
 			/* after connecting the client sends its name */
@@ -112,7 +123,9 @@ int main(int argc, char **argv){
 			
 			max = cConnectionSock > max ? cConnectionSock : max;
 			max = cChatSock > max ? cChatSock : max;
+			max = cWindSock > max ? cWindSock : max;
 			FD_SET(cChatSock, &rdfs);
+			FD_SET(cWindSock, &rdfs);
 		}	
 		
 		else {
@@ -142,14 +155,15 @@ int main(int argc, char **argv){
 						
 						strncpy(buffer, client->name, BUF_SIZE - 1);
 						strncat(buffer, " absent !", BUF_SIZE - strlen(buffer) - 1);
-						sendMessage(clients, client, current, buffer, 1); //broadcast alert
+						sendMessageChat(clients, client, current, buffer, 1); //broadcast alert
 						closesocket(clients[i]->sChat);
 						removeClient(clients, i, &current);
 						printf("Il reste %d clients\n", current);
 					}
 					
 					else{
-						sendMessage(clients, client, current, buffer, 0);
+												
+						sendMessageChat(clients, client, current, buffer, 0);
 					}
 										
 					break;
@@ -160,6 +174,7 @@ int main(int argc, char **argv){
 	clearClients(clients, current);
 	end_connection_server(socketConnection);
 	end_connection_server(socketChat);
+	end_connection_server(socketWind);
 	printf("Fermeture du serveur terminée\n");
 	
 	return EXIT_SUCCESS;

@@ -26,12 +26,15 @@ int main(int argc, char **argv)
 	
 	fd_set rdfs;
 	
-	int selfID;
+	Client perso;
+	perso.ID = 0;
 	
     SOCKET socketConnection = init_connection_client(address, PORTConnection);
     SOCKET socketChat = init_connection_client(address, PORTChat);
+    SOCKET socketWind = init_connection_client(address, PORTWind);
     int max = socketChat;
     max = socketConnection > max ? socketConnection : max;
+    max = socketWind > max ? socketWind : max;
     
     /*On envoit directement le nom sur le canal Connection*/
 	write_to_server(socketConnection, argv[2]);
@@ -46,25 +49,23 @@ int main(int argc, char **argv)
 		/* add the socket */
 		FD_SET(socketChat, &rdfs);
 		FD_SET(socketConnection, &rdfs);
+		FD_SET(socketWind, &rdfs);
 
 		if(select(max + 1, &rdfs, NULL, NULL, NULL) == -1){
 			perror("select()");
 			exit(errno);
 		}
-		
-		
 		if(FD_ISSET(socketConnection, &rdfs)){
 			/*Le serveur donne l'ID*/
 			int n = read_from_server(socketConnection, buffer);
 			//  server down 
 			if(n == 0){printf("Server disconnected !\n");break;}
 			else{
-				selfID = atoi(buffer);
-				printf("I am ID %d\n", selfID);
+				perso.ID = atoi(buffer);
+				printf("I am ID %d\n", perso.ID);
 			}
 		}	
 		
-      
 		if(FD_ISSET(socketChat, &rdfs)){
 			/*Information venant du serveur*/
 			int n = read_from_server(socketChat, buffer);
@@ -92,10 +93,25 @@ int main(int argc, char **argv)
 			
 			write_to_server(socketChat, buffer);
 		}
+		
+		
+		//On reçoit une modification du vent
+		if(FD_ISSET(socketWind, &rdfs)){
+			int n = read_from_server(socketWind, buffer);
+			//  server down 
+			if(n == 0){printf("Server disconnected !\n");break;}
+			else{
+				printf("detected %c%c\n", buffer[0], buffer[1]);
+				perso.Wind.force_vent = atoi(&buffer[0]);
+				perso.Wind.direction_vent = buffer[1];
+				printf("Modification du vent : %d%c\n", perso.Wind.force_vent, perso.Wind.direction_vent);
+			}
+		}	
 	}
 
-    end_connection_client(socketChat);
     end_connection_client(socketConnection);
+    end_connection_client(socketChat);
+    end_connection_client(socketWind);
     
     return EXIT_SUCCESS;
 }
