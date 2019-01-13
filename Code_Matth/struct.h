@@ -64,8 +64,6 @@ typedef struct{
    int ID;
    char name[BUF_SIZE];
    
-   t_vent Wind;
-   
    int toto;
    
 }Client;

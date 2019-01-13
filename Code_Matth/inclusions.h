@@ -30,12 +30,14 @@
 //#include "wind.h"
 #include "struct.h"
 #include "sock.h"
-#include "connection_chat_client.h"
+#include "wind_client.h"
+//#include "connection_chat_client.h"
 //#include "connection_chat_server.h"
 
 
 #include "sock.c"
-#include "connection_chat_client.c"
+#include "wind_client.c"
+//#include "connection_chat_client.c"
 //#include "connection_chat_server.c"
 
 #endif

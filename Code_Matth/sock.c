@@ -108,8 +108,8 @@ void clearClients(Client **clients, int current)
 		closesocket(clients[i]->sConnection);
 		closesocket(clients[i]->sChat);
 		closesocket(clients[i]->sWind);
-		closesocket(clients[i]->sList);
-		closesocket(clients[i]->sUpdate);
+		//closesocket(clients[i]->sList);
+		//closesocket(clients[i]->sUpdate);
 	}
 }
 
@@ -192,6 +192,18 @@ void sendMessageWind(Client **clients, int current, const char *buffer)
 	}
 }
 
+
+////////   Envoi d'un message (dé)connexion vent en broadcast     //////
+////////////////////////////////////////////////////////////////////////
+
+void sendMessageConnection(Client **clients, int current, const char *buffer)
+{
+	int i = 0;
+	for(i = 0; i < current; i++)
+	{
+		write_to_client(clients[i]->sConnection, buffer);				
+	}
+}
 
 
 ////////////////////////////////////////////////////////////////////////

@@ -34,6 +34,7 @@ void removeClient(Client **clients, int to_remove, int *current);
 void write_to_client(SOCKET sock, const char *buffer);
 void sendMessageChat(Client **clients, Client *sender, int current, const char *buffer, char from_server);
 void sendMessageWind(Client **clients, int current, const char *buffer);
+void sendMessageConnection(Client **clients, int current, const char *buffer);
 void clearClients(Client **clients, int current);
 
 

@@ -25,22 +25,21 @@ int main(int argc, char **argv)
 	char* address = argv[1];  
 	
 	fd_set rdfs;
-	
-	Client perso;
-	perso.ID = 0;
+	t_vent* Wind = malloc(sizeof(t_vent));
+	Client* perso = malloc(sizeof(Client));
+	perso->ID = 0;
 	
     SOCKET socketConnection = init_connection_client(address, PORTConnection);
     SOCKET socketChat = init_connection_client(address, PORTChat);
-    SOCKET socketWind = init_connection_client(address, PORTWind);
+    
     int max = socketChat;
     max = socketConnection > max ? socketConnection : max;
-    max = socketWind > max ? socketWind : max;
     
     /*On envoit directement le nom sur le canal Connection*/
 	write_to_server(socketConnection, argv[2]);
-    
+    create_thread_client_wind(address, perso, Wind);
     while(1){
-      
+    
 		FD_ZERO(&rdfs);
 
 		/* add STDIN_FILENO */
@@ -49,7 +48,6 @@ int main(int argc, char **argv)
 		/* add the socket */
 		FD_SET(socketChat, &rdfs);
 		FD_SET(socketConnection, &rdfs);
-		FD_SET(socketWind, &rdfs);
 
 		if(select(max + 1, &rdfs, NULL, NULL, NULL) == -1){
 			perror("select()");
@@ -60,9 +58,11 @@ int main(int argc, char **argv)
 			int n = read_from_server(socketConnection, buffer);
 			//  server down 
 			if(n == 0){printf("Server disconnected !\n");break;}
+			char* exitCondition = "Quit";  //Si serveur déconnecté, il envoit "Quit"
+			if (strcmp(exitCondition, buffer)==0){break;}
 			else{
-				perso.ID = atoi(buffer);
-				printf("I am ID %d\n", perso.ID);
+				perso->ID = atoi(buffer);
+				printf("I am ID %d\n", perso->ID);
 			}
 		}	
 		
@@ -93,25 +93,11 @@ int main(int argc, char **argv)
 			
 			write_to_server(socketChat, buffer);
 		}
-		
-		
-		//On reçoit une modification du vent
-		if(FD_ISSET(socketWind, &rdfs)){
-			int n = read_from_server(socketWind, buffer);
-			//  server down 
-			if(n == 0){printf("Server disconnected !\n");break;}
-			else{
-				printf("detected %c%c\n", buffer[0], buffer[1]);
-				perso.Wind.force_vent = atoi(&buffer[0]);
-				perso.Wind.direction_vent = buffer[1];
-				printf("Modification du vent : %d%c\n", perso.Wind.force_vent, perso.Wind.direction_vent);
-			}
-		}	
 	}
-
+	free(Wind);
+	free(perso);
     end_connection_client(socketConnection);
     end_connection_client(socketChat);
-    end_connection_client(socketWind);
     
     return EXIT_SUCCESS;
 }

@@ -67,7 +67,10 @@ int main(int argc, char **argv){
             
             // Condition de shutdown
             char* exitCondition = "Quit";  //Ecrire "Quit" pour une déconnection client propre
-			if (strcmp(exitCondition, buffer)==0){break;}
+			if (strcmp(exitCondition, buffer)==0){
+				sendMessageConnection(clients, current, buffer);
+				break;
+			}
 			
 			// Modification du vent
 			char* windCondition = "Wind";  //Ecrire "Wind [Force][Direction]" pour modifier les paramètres du vent
@@ -86,27 +89,26 @@ int main(int argc, char **argv){
 			printf("Patientez pendant qu'un client se connecte sur le port %d...\n", PORTConnection);
 			SOCKADDR_IN csin = { 0 };
 			socklen_t crecsize = sizeof(csin);
-			SOCKET cConnectionSock = accept(socketConnection, (SOCKADDR *)&csin, &crecsize);
-			printf("Un client se connecte avec la socket %d de %s:%d\n", cConnectionSock, inet_ntoa(csin.sin_addr), htons(csin.sin_port));
 			
-			if(cConnectionSock == SOCKET_ERROR){
+			/* On complète les services du client et ses infos*/
+			Client* c = malloc(sizeof(Client));
+			
+			//SOCKET cConnectionSock = accept(socketConnection, (SOCKADDR *)&csin, &crecsize);
+			c->sConnection = accept(socketConnection, (SOCKADDR *)&csin, &crecsize);
+			printf("Un client se connecte avec la socket %d de %s:%d\n", c->sConnection, inet_ntoa(csin.sin_addr), htons(csin.sin_port));
+			
+						
+			if(c->sConnection == SOCKET_ERROR){
 				perror("accept()");
 				continue;
 			}
 			
+			c->sChat = accept(socketChat, (SOCKADDR *)&csin, &crecsize);
+			c->sWind = accept(socketWind, (SOCKADDR *)&csin, &crecsize);
 			
-			int cChatSock = accept(socketChat, (SOCKADDR *)&csin, &crecsize);
-			int cWindSock = accept(socketWind, (SOCKADDR *)&csin, &crecsize);
-			
-			/* On complète les services du client et ses infos*/
-			Client* c = malloc(sizeof(Client));
-			c->sConnection = cConnectionSock;
-			c->sChat = cChatSock;
-			c->sWind = cWindSock;
-			c->ID = identifiant;
 			
 			/* after connecting the client sends its name */
-			if(read_from_client(cConnectionSock, buffer) == -1){
+			if(read_from_client(c->sConnection, buffer) == -1){
 				/* disconnected */
 				continue;
 			}
@@ -119,13 +121,13 @@ int main(int argc, char **argv){
 			
 			//On lui renvoit son identifiant
 			sprintf(buffer, "%d", identifiant);
-			write_to_client(cConnectionSock, buffer);
+			write_to_client(c->sConnection, buffer);
 			
-			max = cConnectionSock > max ? cConnectionSock : max;
-			max = cChatSock > max ? cChatSock : max;
-			max = cWindSock > max ? cWindSock : max;
-			FD_SET(cChatSock, &rdfs);
-			FD_SET(cWindSock, &rdfs);
+			max = c->sConnection > max ? c->sConnection : max;
+			max = c->sChat > max ? c->sChat : max;
+			max = c->sWind > max ? c->sWind : max;
+			FD_SET(c->sChat, &rdfs);
+			FD_SET(c->sWind, &rdfs);
 		}	
 		
 		else {
@@ -171,7 +173,7 @@ int main(int argc, char **argv){
 			}
 		}
 	}
-	clearClients(clients, current);
+	clearClients(clients, current);	
 	end_connection_server(socketConnection);
 	end_connection_server(socketChat);
 	end_connection_server(socketWind);
